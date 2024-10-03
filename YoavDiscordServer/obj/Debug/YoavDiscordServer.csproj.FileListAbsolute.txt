@@ -1,0 +1,12 @@
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\Database1.mdf
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\Database1_log.ldf
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\YoavDiscordServer.exe.config
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\YoavDiscordServer.exe
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\YoavDiscordServer.pdb
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.csproj.AssemblyReference.cache
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.csproj.CoreCompileInputs.cache
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.exe
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.pdb
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\Newtonsoft.Json.dll
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\Newtonsoft.Json.xml
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.csproj.CopyComplete
