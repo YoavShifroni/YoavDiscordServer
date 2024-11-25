@@ -25,7 +25,7 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
-        /// the function insert the user into the data base
+        /// The function insert the user into the data base
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
@@ -36,10 +36,10 @@ namespace YoavDiscordServer
         /// <param name="gender"></param>
         /// <returns></returns>
         public int InsertNewUser(string username, string password, string firstName, string lastName, string email,
-            string city, string gender)
+            string city, string gender, byte[] imageToByteArray)
         {
 
-            string query = "INSERT INTO Users (Username, Password, FirstName, LastName, Email, City, Gender) VALUES (@username, @password, @firstname, @lastname, @email, @city, @gender)";
+            string query = "INSERT INTO Users (Username, Password, FirstName, LastName, Email, City, Gender, ProfilePicture) VALUES (@username, @password, @firstname, @lastname, @email, @city, @gender, @imageToByteArray)";
             SqlCommand command = new SqlCommand();
             command.CommandText = query;
             command.Parameters.AddWithValue("@username", username);
@@ -49,6 +49,7 @@ namespace YoavDiscordServer
             command.Parameters.AddWithValue("@email", email);
             command.Parameters.AddWithValue("@city", city);
             command.Parameters.AddWithValue("@gender", gender);
+            command.Parameters.AddWithValue("@imageToByteArray", imageToByteArray);
             connection.Open();
             command.Connection = connection;
             int id = command.ExecuteNonQuery();
@@ -58,7 +59,7 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
-        /// the function check if this username exist in the data base
+        /// The function check if this username exist in the data base
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
@@ -76,7 +77,7 @@ namespace YoavDiscordServer
 
 
         /// <summary>
-        /// the function return the email of this username
+        /// The function return the email of this username
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
@@ -93,7 +94,7 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
-        /// the function return the user Id from his username and his password and on the way check if there is a registered
+        /// The function return the user Id from his username and his password and on the way check if there is a registered
         /// user with this username and password
         /// </summary>
         /// <param name="username"></param>
@@ -115,7 +116,7 @@ namespace YoavDiscordServer
 
 
         /// <summary>
-        /// the function update the Password when someone forgot his password
+        /// The function update the Password in the database when someone forgot his password
         /// </summary>
         /// <param name="username"></param>
         /// <param name="newPassword"></param>
@@ -131,6 +132,11 @@ namespace YoavDiscordServer
             connection.Close();
         }
 
+        /// <summary>
+        /// The function update the profile picture in the database when someone wants to update his profile picture
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="userId"></param>
         public void UpdateProfilePictureByUserId(byte[] bytes, int userId)
         {
             SqlCommand command = new SqlCommand();

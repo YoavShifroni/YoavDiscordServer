@@ -10,8 +10,16 @@ namespace YoavDiscordServer
 {
     public class RsaFunctions
     {
-        public static RSAParameters PublicKey;  
+        /// <summary>
+        /// The RSA public key used for encryption.
+        /// </summary>
+        public static RSAParameters PublicKey;
 
+        /// <summary>
+        /// Encrypts a plain text string using the RSA public key.
+        /// </summary>
+        /// <param name="plainText"></param>
+        /// <returns></returns>
         public static string Encrypt(string plainText)
         {
             byte[] encrypted;

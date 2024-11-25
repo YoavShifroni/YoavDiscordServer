@@ -10,7 +10,12 @@ namespace YoavDiscordServer
 {
     public class Program
     {
+        /// <summary>
+        /// The port number that this server will listen to
+        /// </summary>
         const int portNo = 500;
+
+
         /// <summary>
         /// Main function to run
         /// </summary>
@@ -21,8 +26,7 @@ namespace YoavDiscordServer
 
             TcpListener listener = new TcpListener(IPAddress.Any, portNo);
 
-
-
+            
             Console.WriteLine("Server is ready.");
 
             // Start listen to incoming connection requests
