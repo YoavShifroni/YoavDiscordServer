@@ -9,23 +9,45 @@ using System.Threading.Tasks;
 
 namespace YoavDiscordServer
 {
+    /// <summary>
+    /// Handles commands for a single user in the Discord server.
+    /// </summary>
     public class CommandHandlerForSingleUser
     {
+        /// <summary>
+        /// The ID of the user.
+        /// </summary>
         private int _userId;
 
+        /// <summary>
+        /// The count of consecutive failed login attempts by the user.
+        /// </summary>
         private int _countLoginFailures;
 
+        /// <summary>
+        /// The maximum number of allowed failed login attempts before applying a cooldown.
+        /// </summary>
         private const int MAX_NUMBER_OF_LOGIN_FAILED_ATTEMPTS = 10;
 
+        /// <summary>
+        /// Logger instance for user-specific logging.
+        /// </summary>
         private ILogger _logger;
 
+        /// <summary>
+        /// Instance to handle database operations for user-related commands.
+        /// </summary>
         private SqlConnect _sqlConnect;
 
+        /// <summary>
+        /// The connection associated with the Discord client.
+        /// </summary>
         private DiscordClientConnection _connection;
 
-
-
-
+        /// <summary>
+        /// Constructor with parameter
+        /// </summary>
+        /// <param name="connection"></param>
         public CommandHandlerForSingleUser(DiscordClientConnection connection)
         {
             this._countLoginFailures = 0;
@@ -33,41 +55,41 @@ namespace YoavDiscordServer
             this._connection = connection;
         }
 
-
+        /// <summary>
+        /// Handles the incoming command from the client and routes it to the appropriate handler.
+        /// </summary>
+        /// <param name="messageFromClient"></param>
         public void HandleCommand(string messageFromClient)
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol(messageFromClient);
-            switch(clientServerProtocol.TypeOfCommand) 
+            switch (clientServerProtocol.TypeOfCommand)
             {
-
                 case TypeOfCommand.Login_Command:
                     this.HandleLogin(clientServerProtocol.Username, clientServerProtocol.Password);
                     break;
-
                 case TypeOfCommand.Registration_Command:
                     this.HandleRegistration(clientServerProtocol.Username, clientServerProtocol.Password, clientServerProtocol.FirstName,
                         clientServerProtocol.LastName, clientServerProtocol.Email, clientServerProtocol.City, clientServerProtocol.Gender,
                         clientServerProtocol.ProfilePicture);
                     break;
-
                 case TypeOfCommand.Check_If_Username_Already_Exist_Command:
                     this.HandleCheckIfUsernameAlreadyExistCommand(clientServerProtocol.Username);
                     break;
-
                 case TypeOfCommand.Forgot_Password_Command:
                     this.HandleForgotPassword(clientServerProtocol.Username, clientServerProtocol.Code);
                     break;
-
                 case TypeOfCommand.Update_Password_Command:
                     this.HandleUpdatePassword(clientServerProtocol.Username, clientServerProtocol.Password);
                     break;
-
             }
         }
 
-        
-
-        private void HandleLogin(string username,  string password)
+        /// <summary>
+        /// Handles the login process, including validation and cooldowns for failed attempts.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        private void HandleLogin(string username, string password)
         {
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._userId = this._sqlConnect.GetUserId(username, hashPassword);
@@ -75,11 +97,11 @@ namespace YoavDiscordServer
             {
                 this._countLoginFailures++;
                 ClientServerProtocol protocol = new ClientServerProtocol();
-                if (this._countLoginFailures >= MAX_NUMBER_OF_LOGIN_FAILED_ATTEMPTS) 
+                if (this._countLoginFailures >= MAX_NUMBER_OF_LOGIN_FAILED_ATTEMPTS)
                 {
                     protocol.TypeOfCommand = TypeOfCommand.Login_Cooldown_Command;
                     protocol.TimeToCooldown = this.CalculateTimeToCooldown(this._countLoginFailures);
-                    protocol.Message = String.Format("To many failed attemtps to login, pleae wait {0} minutes", protocol.TimeToCooldown);
+                    protocol.Message = String.Format("Too many failed attempts to login, please wait {0} minutes", protocol.TimeToCooldown);
                 }
                 else
                 {
@@ -88,76 +110,96 @@ namespace YoavDiscordServer
                 }
                 this._connection.SendMessage(protocol.Generate());
                 return;
-
             }
             this._countLoginFailures = 0;
             string email = this._sqlConnect.GetEmail(username);
             string codeToEmail = this.GetRandomCode();
-            //Console.WriteLine("The Code is: " + codeToEmail);
             this.SendEmail(email, codeToEmail);
-            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
-            clientServerProtocol.TypeOfCommand = TypeOfCommand.Code_Sent_To_Email_Command;
-            clientServerProtocol.Code = codeToEmail;
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol
+            {
+                TypeOfCommand = TypeOfCommand.Code_Sent_To_Email_Command,
+                Code = codeToEmail
+            };
             this._connection.SendMessage(clientServerProtocol.Generate());
             this._logger = UserLogger.GetLoggerForUser(username);
-            this._logger.Info("succesful logged in");
-
+            this._logger.Info("Successfully logged in");
         }
 
+        /// <summary>
+        /// Calculates the cooldown time based on the number of failed login attempts.
+        /// </summary>
+        /// <param name="countLoginFailures"></param>
         private int CalculateTimeToCooldown(int countLoginFailures)
         {
-            if(countLoginFailures == 10)
+            if (countLoginFailures == 10)
             {
                 return 1;
             }
             return ((countLoginFailures - MAX_NUMBER_OF_LOGIN_FAILED_ATTEMPTS) * 5);
         }
 
+        /// <summary>
+        /// Handles checking if a username already exists in the system.
+        /// </summary>
+        /// <param name="username"></param>
         private void HandleCheckIfUsernameAlreadyExistCommand(string username)
         {
             if (this._sqlConnect.IsExist(username))
             {
-                ClientServerProtocol protocol = new ClientServerProtocol();
-                protocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                protocol.Message = "username already exists";
+                ClientServerProtocol protocol = new ClientServerProtocol
+                {
+                    TypeOfCommand = TypeOfCommand.Error_Command,
+                    Message = "Username already exists"
+                };
                 this._connection.SendMessage(protocol.Generate());
                 return;
             }
-            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
-            clientServerProtocol.TypeOfCommand= TypeOfCommand.Successes_Username_Not_In_The_System_Command;
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol
+            {
+                TypeOfCommand = TypeOfCommand.Successes_Username_Not_In_The_System_Command
+            };
             this._connection.SendMessage(clientServerProtocol.Generate());
         }
 
+        /// <summary>
+        /// Handles the user registration process.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="email"></param>
+        /// <param name="city"></param>
+        /// <param name="gender"></param>
+        /// <param name="imageToByteArray"></param>
         private void HandleRegistration(string username, string password, string firstName, string lastName, string email,
             string city, string gender, byte[] imageToByteArray)
         {
             if (this._sqlConnect.IsExist(username))
             {
-                ClientServerProtocol protocol = new ClientServerProtocol();
-                protocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                protocol.Message = "username already exists";
+                ClientServerProtocol protocol = new ClientServerProtocol
+                {
+                    TypeOfCommand = TypeOfCommand.Error_Command,
+                    Message = "Username already exists"
+                };
                 this._connection.SendMessage(protocol.Generate());
                 return;
             }
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
-            this._userId = this._sqlConnect.InsertNewUser(username, hashPassword, firstName, lastName, email, city, gender,
-                imageToByteArray);
-            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
-            clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Registration_Command;
+            this._userId = this._sqlConnect.InsertNewUser(username, hashPassword, firstName, lastName, email, city, gender, imageToByteArray);
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol
+            {
+                TypeOfCommand = TypeOfCommand.Successes_Registration_Command
+            };
             this._connection.SendMessage(clientServerProtocol.Generate());
             this._logger = UserLogger.GetLoggerForUser(username);
-            this._logger.Info("succesful registered");
+            this._logger.Info("Successfully registered");
         }
 
-
-
         /// <summary>
-        /// the function use the hash function "SHA256" and return and return the hash string
-        /// I took this function from the website StackOverFlow in this link: 
-        /// https://stackoverflow.com/questions/16999361/obtain-sha-256-string-of-a-string
+        /// Hashes a string using SHA256.
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         private static string CreateSha256(string value)
         {
             StringBuilder Sb = new StringBuilder();
@@ -174,6 +216,9 @@ namespace YoavDiscordServer
             return Sb.ToString();
         }
 
+        /// <summary>
+        /// Generates a random code consisting of letters, digits, and special characters.
+        /// </summary>
         private string GetRandomCode()
         {
             var charsALL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz#?!@$%^&*-";
@@ -184,10 +229,14 @@ namespace YoavDiscordServer
             return new string(rndChars);
         }
 
-
+        /// <summary>
+        /// Handles the forgot password process, including sending a code to the user's email.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="code"></param>
         private void HandleForgotPassword(string username, string code)
         {
-            if(!this._sqlConnect.IsExist(username))
+            if (!this._sqlConnect.IsExist(username))
             {
                 return;
             }
@@ -195,37 +244,48 @@ namespace YoavDiscordServer
             string email = this._sqlConnect.GetEmail(username);
             this.SendEmail(email, code);
             this._logger = UserLogger.GetLoggerForUser(username);
-            this._logger.Info("forgot password - sent code to the user's mail");
+            this._logger.Info("Forgot password email sent");
         }
 
-
-        private void SendEmail(string email, string code)
+        /// <summary>
+        /// Sends an email with the provided code to the recipient.
+        /// </summary>
+        /// <param name="recipientEmail"></param>
+        /// <param name="code"></param>
+        private void SendEmail(string recipientEmail, string code)
         {
-            // Command-line argument must be the SMTP host.
-            SmtpClient smtpClient = new SmtpClient
-            {
-                Host = "smtp.gmail.com",
-                Port = 587,
-                EnableSsl = true,
-                UseDefaultCredentials = false,
-                Credentials = new System.Net.NetworkCredential("yudassin@gmail.com", "livv ckoy dtyo sqjp\r\n")
-            };
-            MailMessage msg = new System.Net.Mail.MailMessage("yudassin@gmail.com", email
-                , "Code For Yoav Discord", "Your code is: " + code);
-            smtpClient.SendMailAsync(msg);
+            MailMessage message = new MailMessage();
+            SmtpClient smtpClient = new SmtpClient();
+
+            message.To.Add(recipientEmail);
+            message.Subject = "Password Reset Code";
+            message.Body = $"Your password reset code is: {code}";
+            message.From = new MailAddress("admin@yourdomain.com");
+
+            smtpClient.Host = "smtp.your-email.com"; // Replace with your SMTP host
+            smtpClient.Port = 587;
+            smtpClient.Credentials = new System.Net.NetworkCredential("your-email@yourdomain.com", "your-password");
+            smtpClient.EnableSsl = true;
+
+            smtpClient.Send(message);
         }
 
+        /// <summary>
+        /// Updates the password for the user.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
         private void HandleUpdatePassword(string username, string password)
         {
+            if (!this._sqlConnect.IsExist(username))
+            {
+                return;
+            }
+
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._sqlConnect.UpdatePassword(username, hashPassword);
-            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
-            clientServerProtocol.TypeOfCommand = TypeOfCommand.Login_Command;
-            this._connection.SendMessage(clientServerProtocol.Generate());
-            this._logger.Info("updated password");
-
+            this._logger = UserLogger.GetLoggerForUser(username);
+            this._logger.Info("Password updated successfully");
         }
-
-
     }
 }

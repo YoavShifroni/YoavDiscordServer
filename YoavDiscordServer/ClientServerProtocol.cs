@@ -60,7 +60,9 @@ namespace YoavDiscordServer
         /// </summary>
         public byte[] ProfilePicture { get; set; }
 
-
+        /// <summary>
+        /// The number of minutes that the user need to wait
+        /// </summary>
         public int TimeToCooldown { get; set; }
 
         /// <summary>

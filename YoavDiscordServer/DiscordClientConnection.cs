@@ -15,35 +15,67 @@ namespace YoavDiscordServer
 {
     public class DiscordClientConnection
     {
+        /// <summary>
+        /// Collection of all connected clients.
+        /// </summary>
         public static Hashtable AllClients = new Hashtable();
 
+        /// <summary>
+        /// The TCP client representing the connection.
+        /// </summary>
         private TcpClient _client;
 
+        /// <summary>
+        /// The IP address of the connected client.
+        /// </summary>
         private string _clientIP;
 
+        /// <summary>
+        /// Buffer for reading data from the client.
+        /// </summary>
         private byte[] _data;
 
+        /// <summary>
+        /// Timestamp of the client's last connection.
+        /// </summary>
         private DateTime _lastConnect;
 
+        /// <summary>
+        /// Indicates if the first message has been received from the client.
+        /// </summary>
         private bool _isFirstMessage = true;
 
+        /// <summary>
+        /// Handler for processing commands for a single user.
+        /// </summary>
         private CommandHandlerForSingleUser _commandHandlerForSingleUser;
 
+        /// <summary>
+        /// Length of the current message being read from the client.
+        /// </summary>
         private int messageLength = -1;
 
+        /// <summary>
+        /// Total number of bytes read from the current message.
+        /// </summary>
         private int totalBytesRead = 0;
-        
+
+        /// <summary>
+        /// Memory stream used for assembling incoming message data.
+        /// </summary>
         private MemoryStream memoryStream = new MemoryStream();
 
-
+        /// <summary>
+        /// Constructor with parameter
+        /// </summary>
+        /// <param name="client">The TCP client representing the connection.</param>
         public DiscordClientConnection(TcpClient client)
         {
             int count = 0;
             this._client = client;
 
-            // get the ip address of the client to register him with our client list
+            // Get the IP address of the client to register in our client list
             this._clientIP = client.Client.RemoteEndPoint.ToString();
-
 
             // DOS protection
             foreach (DictionaryEntry user in AllClients)
@@ -63,36 +95,31 @@ namespace YoavDiscordServer
             }
             if (count >= 10)
             {
-                throw new Exception("someone trying to connect too fast (DOS)");
+                throw new Exception("Someone is trying to connect too fast (DOS)");
             }
 
             // Add the new client to our clients collection
             AllClients.Add(this._clientIP, this);
 
-            // Read data from the client async
+            // Read data from the client asynchronously
             this._data = new byte[this._client.ReceiveBufferSize];
 
             this._lastConnect = DateTime.Now;
 
             this._commandHandlerForSingleUser = new CommandHandlerForSingleUser(this);
 
-            // BeginRead will begin async read from the NetworkStream
-            // This allows the server to remain responsive and continue accepting new connections from other clients
-            // When reading complete control will be transfered to the ReviveMessage function.
-
+            // Begin async read from the NetworkStream
             _client.GetStream().BeginRead(this._data,
                                           0,
                                           System.Convert.ToInt32(this._client.ReceiveBufferSize),
                                           ReceiveMessage,
                                           _client.GetStream());
-
-
         }
 
         /// <summary>
-        /// The function convert the string that we want to send to the server into byte array and send it to the server over the tcp connection
+        /// Sends a message to the client over the TCP connection.
         /// </summary>
-        /// <param name="message">Message to send</param>
+        /// <param name="message"></param>
         public void SendMessage(string message)
         {
             Console.WriteLine(message);
@@ -100,15 +127,13 @@ namespace YoavDiscordServer
             {
                 NetworkStream ns;
 
-                // we use lock to present multiple threads from using the networkstream object
-                // this is likely to occur when the server is connected to multiple clients all of 
-                // them trying to access to the networkstream at the same time.
+                // Use lock to prevent multiple threads from accessing the network stream simultaneously
                 lock (this._client.GetStream())
                 {
                     ns = this._client.GetStream();
                 }
 
-                if(this._isFirstMessage)
+                if (this._isFirstMessage)
                 {
                     message = RsaFunctions.Encrypt(message);
                 }
@@ -129,12 +154,7 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
-        /// The function reads bytes from the socket. When this is a new message, the first 4 bytes represent the length
-        /// of the message. This is needed because TCP has max of 64K size, so if we need to send something bigger than 64K,
-        /// we need do something special.
-        /// This message will continue to read from the socket, until we receive the full message (until we read number of bytes, that is
-        /// equals to the 'length'.
-        /// Inspired by chat GPT 
+        /// Receives a message from the client asynchronously and processes it when complete.
         /// </summary>
         /// <param name="ar"></param>
         private void ReceiveMessage(IAsyncResult ar)
@@ -158,7 +178,7 @@ namespace YoavDiscordServer
                         // Check if we have read the full length header
                         if (this.totalBytesRead >= 4)
                         {
-                            // Move the memory steam's read pointer to the beginning 
+                            // Move the memory stream's read pointer to the beginning 
                             this.memoryStream.Seek(0, SeekOrigin.Begin);
                             byte[] lengthBytes = new byte[4];
                             // Read 4 bytes from the memory stream into lengthBytes
@@ -187,7 +207,7 @@ namespace YoavDiscordServer
                     {
                         ProcessMessage(this.memoryStream.ToArray(), this.totalBytesRead - 4);
 
-                        //Reset all the properties that read from the socket, so we are ready for the next message
+                        // Reset properties for the next message
                         this.messageLength = -1;
                         this.totalBytesRead = 0;
                         this.memoryStream.SetLength(0);
@@ -195,7 +215,7 @@ namespace YoavDiscordServer
                 }
                 lock (this._client.GetStream())
                 {
-                    // continue reading form the client
+                    // Continue reading from the client
                     this._client.GetStream().BeginRead(this._data, 0, System.Convert.ToInt32(this._client.ReceiveBufferSize),
                         ReceiveMessage, _client.GetStream());
                 }
@@ -206,18 +226,17 @@ namespace YoavDiscordServer
                 AllClients.Remove(this._clientIP);
                 stream.Close();
             }
-
         }
 
         /// <summary>
-        /// The function processes the message that we received from the socket (the full message)
+        /// Processes a received message from the client.
         /// </summary>
-        /// <param name="messageData"></param>
-        /// <param name="bytesRead"></param>
+        /// <param name="messageData">The raw message data.</param>
+        /// <param name="bytesRead">The number of bytes read.</param>
         public void ProcessMessage(byte[] messageData, int bytesRead)
-        {     
+        {
             string commandRecive = System.Text.Encoding.UTF8.GetString(messageData, 0, bytesRead);
-            Console.WriteLine("commandRecive: "+ commandRecive);
+            Console.WriteLine("commandRecive: " + commandRecive);
 
             if (this._isFirstMessage)
             {
@@ -225,7 +244,7 @@ namespace YoavDiscordServer
                 Console.WriteLine("Rsa public key recived");
                 var jsonString = JsonConvert.SerializeObject(AesFunctions.AesKeys);
                 this.SendMessage(jsonString);
-                Console.WriteLine("Aes key and iv send");
+                Console.WriteLine("Aes key and iv sent");
                 this._isFirstMessage = false;
 
             }
@@ -239,11 +258,11 @@ namespace YoavDiscordServer
                     Console.WriteLine(lines[i]);
                     this._commandHandlerForSingleUser.HandleCommand(lines[i]);
                 }
-            }   
+            }
         }
 
         /// <summary>
-        /// Close down the connection
+        /// Closes the client connection and removes it from the list of active clients.
         /// </summary>
         public void Close()
         {
