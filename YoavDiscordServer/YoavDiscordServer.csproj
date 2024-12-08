@@ -75,6 +75,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RsaFunctions.cs" />
     <Compile Include="SqlConnect.cs" />
+    <Compile Include="TcpConnectionHandler.cs" />
     <Compile Include="TypeOfCommand.cs" />
     <Compile Include="UserLogger.cs" />
   </ItemGroup>

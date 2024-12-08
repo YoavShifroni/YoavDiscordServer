@@ -77,7 +77,7 @@ namespace YoavDiscordServer
 
 
         /// <summary>
-        /// The function return the email of this username
+        /// The function return the email of this user
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
@@ -89,6 +89,42 @@ namespace YoavDiscordServer
             connection.Open();
             command.Connection = connection;
             string b = (string)command.ExecuteScalar();
+            connection.Close();
+            return b;
+        }
+
+
+        /// <summary>
+        /// The function return the current password of this user
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public string GetPassword(string username)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT Password FROM Users WHERE Username  = @username";
+            command.Parameters.AddWithValue("@username", username);
+            connection.Open();
+            command.Connection = connection;
+            string b = (string)command.ExecuteScalar();
+            connection.Close();
+            return b;
+        }
+
+
+        /// <summary>
+        /// The function return the profile picture of the user
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public byte[] GetProfilePicture(string username)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT ProfilePicture FROM Users WHERE Username  = @username";
+            command.Parameters.AddWithValue("@username", username);
+            connection.Open();
+            command.Connection = connection;
+            byte[] b = (byte[])command.ExecuteScalar();
             connection.Close();
             return b;
         }
