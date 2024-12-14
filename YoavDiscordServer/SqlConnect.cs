@@ -117,11 +117,30 @@ namespace YoavDiscordServer
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        public byte[] GetProfilePicture(string username)
+        public byte[] GetProfilePictureByUsername(string username)
         {
             SqlCommand command = new SqlCommand();
             command.CommandText = "SELECT ProfilePicture FROM Users WHERE Username  = @username";
             command.Parameters.AddWithValue("@username", username);
+            connection.Open();
+            command.Connection = connection;
+            byte[] b = (byte[])command.ExecuteScalar();
+            connection.Close();
+            return b;
+        }
+
+
+
+        /// <summary>
+        /// The function return the profile picture of the user
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public byte[] GetProfilePictureByUserId(int userId)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT ProfilePicture FROM Users WHERE Id  = @userId";
+            command.Parameters.AddWithValue("@userId", userId);
             connection.Open();
             command.Connection = connection;
             byte[] b = (byte[])command.ExecuteScalar();

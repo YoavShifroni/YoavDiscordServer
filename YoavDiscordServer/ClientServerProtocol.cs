@@ -48,7 +48,7 @@ namespace YoavDiscordServer
         /// <summary>
         /// The message that will be showed to the user
         /// </summary>
-        public string Message { get; set; }
+        public string ErrorMessage { get; set; }
 
         /// <summary>
         /// The code that sent to the user mail
@@ -64,6 +64,12 @@ namespace YoavDiscordServer
         /// The number of minutes that the user need to wait
         /// </summary>
         public int TimeToCooldown { get; set; }
+
+        public string MessageThatTheUserSent { get; set; }
+
+        public DateTime TimeThatTheMessageWasSent { get; set; }
+
+        public int UserId { get; set; }
 
         /// <summary>
         /// Empty constructor
@@ -88,11 +94,11 @@ namespace YoavDiscordServer
             switch (cmd)
             {
                 case TypeOfCommand.Error_Command:
-                    this.Message = answer[1];
+                    this.ErrorMessage = answer[1];
                     break;
 
                 case TypeOfCommand.Login_Cooldown_Command:
-                    this.Message = answer[1];
+                    this.ErrorMessage = answer[1];
                     this.TimeToCooldown = Convert.ToInt32(answer[2]);
                     break;
 
@@ -140,7 +146,32 @@ namespace YoavDiscordServer
                     this.Username = answer[2];
                     break;
 
+                case TypeOfCommand.Send_Message_Command:
+                    this.MessageThatTheUserSent = answer[1];
+                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[2]);
+                    break;
 
+                case TypeOfCommand.Message_From_Other_User_Command:
+                    this.Username = answer[1];
+                    this.UserId = Convert.ToInt32(answer[2]);
+                    this.MessageThatTheUserSent = answer[3];
+                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[4]);
+                    break;
+
+                case TypeOfCommand.Fetch_Image_Of_User_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.Username = answer[2];
+                    this.MessageThatTheUserSent = answer[3];
+                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[4]);
+                    break;
+
+                case TypeOfCommand.Return_Image_Of_User_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.ProfilePicture = Convert.FromBase64String(answer[2]);
+                    this.Username = answer[3];
+                    this.MessageThatTheUserSent = answer[4];
+                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[5]);
+                    break;
             }
         }
 
@@ -156,7 +187,7 @@ namespace YoavDiscordServer
             switch (this.TypeOfCommand)
             {
                 case TypeOfCommand.Error_Command:
-                    toSend += this.Message += "\n";
+                    toSend += this.ErrorMessage += "\n";
                     break;
 
                 case TypeOfCommand.Login_Command:
@@ -165,7 +196,7 @@ namespace YoavDiscordServer
                     break;
 
                 case TypeOfCommand.Login_Cooldown_Command:
-                    toSend += this.Message + "\n";
+                    toSend += this.ErrorMessage + "\n";
                     toSend += this.TimeToCooldown.ToString() + "\n";
                     break;
 
@@ -206,6 +237,33 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Successes_Connected_To_The_Application_Command:
                     toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
                     toSend += this.Username + "\n";
+                    break;
+
+                case TypeOfCommand.Send_Message_Command:
+                    toSend += this.MessageThatTheUserSent + "\n";
+                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Message_From_Other_User_Command:
+                    toSend += this.Username + "\n";
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.MessageThatTheUserSent + "\n";
+                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Fetch_Image_Of_User_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.Username + "\n";
+                    toSend += this.MessageThatTheUserSent + "\n";
+                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Return_Image_Of_User_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
+                    toSend += this.Username + "\n";
+                    toSend += this.MessageThatTheUserSent + "\n";
+                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
                     break;
 
             }

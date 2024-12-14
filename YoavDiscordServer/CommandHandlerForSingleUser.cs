@@ -17,14 +17,17 @@ namespace YoavDiscordServer
         /// <summary>
         /// The ID of the user.
         /// </summary>
-        private int _userId;
+        public int _userId;
 
         /// <summary>
         /// The count of consecutive failed login attempts by the user.
         /// </summary>
         private int _countLoginFailures;
 
+
         private string _username;
+
+        private byte[] _profilePicture;
 
         /// <summary>
         /// The maximum number of allowed failed login attempts before applying a cooldown.
@@ -87,10 +90,23 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Get_Username_And_Profile_Picture_Command:
                     this.HandleGetUsernameAndProfilePicture();
                     break;
+
+                case TypeOfCommand.Send_Message_Command:
+                    this.HandleSendMessage(clientServerProtocol.MessageThatTheUserSent, clientServerProtocol.TimeThatTheMessageWasSent);
+                    break;
+
+                case TypeOfCommand.Fetch_Image_Of_User_Command:
+                    this.HandleFetchImageOfUser(clientServerProtocol.UserId, clientServerProtocol.Username, clientServerProtocol.MessageThatTheUserSent,
+                        clientServerProtocol.TimeThatTheMessageWasSent);
+                    break;
             }
         }
 
         
+
+
+
+
 
         /// <summary>
         /// Handles the login process, including validation and cooldowns for failed attempts.
@@ -109,13 +125,13 @@ namespace YoavDiscordServer
                 {
                     protocol.TypeOfCommand = TypeOfCommand.Login_Cooldown_Command;
                     protocol.TimeToCooldown = this.CalculateTimeToCooldown(this._countLoginFailures);
-                    protocol.Message = String.Format("Too many failed attempts to login, please wait {0} " +
+                    protocol.ErrorMessage = String.Format("Too many failed attempts to login, please wait {0} " +
                         "minutes", protocol.TimeToCooldown);
                 }
                 else
                 {
                     protocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                    protocol.Message = "Wrong username or password";
+                    protocol.ErrorMessage = "Wrong username or password";
                 }
                 this._connection.SendMessage(protocol.Generate());
                 return;
@@ -156,7 +172,7 @@ namespace YoavDiscordServer
             if (this._sqlConnect.IsExist(username))
             {
                 protocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                protocol.Message = "Username already exists";
+                protocol.ErrorMessage = "Username already exists";
                 this._connection.SendMessage(protocol.Generate());
                 return;
             }
@@ -182,12 +198,14 @@ namespace YoavDiscordServer
             {
                 ClientServerProtocol protocol = new ClientServerProtocol();
                 protocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                protocol.Message = "Username already exists";
+                protocol.ErrorMessage = "Username already exists";
                 this._connection.SendMessage(protocol.Generate());
                 return;
             }
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._userId = this._sqlConnect.InsertNewUser(username, hashPassword, firstName, lastName, email, city, gender, imageToByteArray);
+            this._username = username;
+            this._profilePicture = imageToByteArray;
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Connected_To_The_Application_Command;
             clientServerProtocol.ProfilePicture = imageToByteArray;
@@ -241,10 +259,11 @@ namespace YoavDiscordServer
             if (!this._sqlConnect.IsExist(username))
             {
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                clientServerProtocol.Message = "The username isn't exist in the system, please check the username that you entered";
+                clientServerProtocol.ErrorMessage = "The username isn't exist in the system, please check the username that you entered";
             }
             else
             {
+                this._username = username;
                 string email = this._sqlConnect.GetEmail(username);
                 this.SendEmail(email, code);
                 this._logger = UserLogger.GetLoggerForUser(username);
@@ -294,7 +313,7 @@ namespace YoavDiscordServer
             if(currentPassword == hashNewPassword)
             {
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Error_Command;
-                clientServerProtocol.Message = "the password that you entered is your past password, " +
+                clientServerProtocol.ErrorMessage = "the password that you entered is your past password, " +
                     "please enter different password or just login with this password";
             }
             else
@@ -303,7 +322,8 @@ namespace YoavDiscordServer
                 this._logger = UserLogger.GetLoggerForUser(username);
                 this._logger.Info("Password updated successfully");
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Connected_To_The_Application_Command;
-                clientServerProtocol.ProfilePicture = this._sqlConnect.GetProfilePicture(username);
+                this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(username);
+                clientServerProtocol.ProfilePicture = this._profilePicture;
                 clientServerProtocol.Username = username;
             }
             this._connection.SendMessage(clientServerProtocol.Generate());
@@ -314,8 +334,28 @@ namespace YoavDiscordServer
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Connected_To_The_Application_Command;
-            clientServerProtocol.ProfilePicture = this._sqlConnect.GetProfilePicture(this._username);
+            this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(this._username);
+            clientServerProtocol.ProfilePicture = this._profilePicture;
             clientServerProtocol.Username = this._username;
+            this._connection.SendMessage(clientServerProtocol.Generate());
+        }
+
+        private void HandleSendMessage(string messageThatTheUserSent, DateTime timeThatTheMessageWasSent)
+        {
+            ChatRoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this._username, messageThatTheUserSent,
+                timeThatTheMessageWasSent);
+        }
+
+        private void HandleFetchImageOfUser(int userId, string username, string messageThatTheUserSent, DateTime time)
+        {
+            byte[] someUserProfilePicture = this._sqlConnect.GetProfilePictureByUserId(userId);
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Return_Image_Of_User_Command;
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.ProfilePicture = someUserProfilePicture;
+            clientServerProtocol.Username = username;
+            clientServerProtocol.MessageThatTheUserSent = messageThatTheUserSent;
+            clientServerProtocol.TimeThatTheMessageWasSent = time;
             this._connection.SendMessage(clientServerProtocol.Generate());
         }
     }

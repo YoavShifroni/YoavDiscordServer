@@ -144,5 +144,18 @@ namespace YoavDiscordServer
         {
             AllClients.Remove(this._clientIP);
         }
+
+        public static void SendMessageToAllUserExceptOne(int userIdToExclude, ClientServerProtocol protocol)
+        {
+            foreach (DiscordClientConnection user in AllClients.Values)
+            {
+                if (user._commandHandlerForSingleUser._userId > 0 && user._commandHandlerForSingleUser._userId != userIdToExclude)
+                {
+                    user.SendMessage(protocol.Generate());
+                }
+            }
+        }
+
+        
     }
 }

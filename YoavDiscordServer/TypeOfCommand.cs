@@ -23,8 +23,10 @@ namespace YoavDiscordServer
         Update_Password_Command,
         Profile_Picture_Selected_Command,
         Login_Cooldown_Command,
-        Get_Username_And_Profile_Picture_Command
-
-
+        Get_Username_And_Profile_Picture_Command,
+        Send_Message_Command,
+        Message_From_Other_User_Command,
+        Fetch_Image_Of_User_Command,
+        Return_Image_Of_User_Command,
     }
 }

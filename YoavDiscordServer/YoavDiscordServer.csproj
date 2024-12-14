@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="AesFunctions.cs" />
     <Compile Include="AesKeys.cs" />
+    <Compile Include="ChatRoomsManager.cs" />
     <Compile Include="ClientServerProtocol.cs" />
     <Compile Include="CommandHandlerForSingleUser.cs" />
     <Compile Include="DiscordClientConnection.cs" />

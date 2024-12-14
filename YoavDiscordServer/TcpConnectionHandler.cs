@@ -64,7 +64,7 @@ namespace YoavDiscordServer
                                           System.Convert.ToInt32(this._client.ReceiveBufferSize),
                                           ReceiveMessage,
                                           _client.GetStream());
-
+    
         }
 
 
