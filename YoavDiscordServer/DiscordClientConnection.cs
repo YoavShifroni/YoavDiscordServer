@@ -156,6 +156,18 @@ namespace YoavDiscordServer
             }
         }
 
-        
+        public static void SendMessageToSpecificUser(int userId, ClientServerProtocol protocol)
+        {
+            foreach (DiscordClientConnection user in AllClients.Values)
+            {
+                if (user._commandHandlerForSingleUser._userId > 0 && user._commandHandlerForSingleUser._userId == userId)
+                {
+                    user.SendMessage(protocol.Generate());
+                    return;
+                }
+            }
+        }
+
+
     }
 }

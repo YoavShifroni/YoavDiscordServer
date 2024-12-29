@@ -15,9 +15,9 @@ namespace YoavDiscordServer
         Login_Command,
         Check_If_Username_Already_Exist_Command,
         Code_Sent_To_Email_Command,
-        Successes_Username_Not_In_The_System_Command,
-        Successes_Connected_To_The_Application_Command,
-        Successes_Forgot_Password_Command,
+        Success_Username_Not_In_The_System_Command,
+        Success_Connected_To_The_Application_Command,
+        Success_Forgot_Password_Command,
         Error_Command,
         Forgot_Password_Command,
         Update_Password_Command,
@@ -28,5 +28,7 @@ namespace YoavDiscordServer
         Message_From_Other_User_Command,
         Fetch_Image_Of_User_Command,
         Return_Image_Of_User_Command,
+        Get_Messages_History_Of_Chat_Room_Command,
+        Return_Messages_History_Of_Chat_Room_Command,
     }
 }

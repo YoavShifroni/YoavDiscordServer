@@ -69,7 +69,11 @@ namespace YoavDiscordServer
 
         public DateTime TimeThatTheMessageWasSent { get; set; }
 
+        public int ChatRoomId { get; set; }
+
         public int UserId { get; set; }
+
+        public string MessagesOfAChatRoomJson {  get; set; }
 
         /// <summary>
         /// Empty constructor
@@ -137,18 +141,18 @@ namespace YoavDiscordServer
                     break;
 
                 case TypeOfCommand.Get_Username_And_Profile_Picture_Command:
-                case TypeOfCommand.Successes_Username_Not_In_The_System_Command:
-                case TypeOfCommand.Successes_Forgot_Password_Command:
+                case TypeOfCommand.Success_Username_Not_In_The_System_Command:
+                case TypeOfCommand.Success_Forgot_Password_Command:
                     break;
 
-                case TypeOfCommand.Successes_Connected_To_The_Application_Command:
+                case TypeOfCommand.Success_Connected_To_The_Application_Command:
                     this.ProfilePicture = Convert.FromBase64String(answer[1]);
                     this.Username = answer[2];
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
                     this.MessageThatTheUserSent = answer[1];
-                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[2]);
+                    this.ChatRoomId = Convert.ToInt32(answer[2]);
                     break;
 
                 case TypeOfCommand.Message_From_Other_User_Command:
@@ -156,6 +160,7 @@ namespace YoavDiscordServer
                     this.UserId = Convert.ToInt32(answer[2]);
                     this.MessageThatTheUserSent = answer[3];
                     this.TimeThatTheMessageWasSent = DateTime.Parse(answer[4]);
+                    this.ChatRoomId = Convert.ToInt32(answer[5]);
                     break;
 
                 case TypeOfCommand.Fetch_Image_Of_User_Command:
@@ -163,6 +168,7 @@ namespace YoavDiscordServer
                     this.Username = answer[2];
                     this.MessageThatTheUserSent = answer[3];
                     this.TimeThatTheMessageWasSent = DateTime.Parse(answer[4]);
+                    this.ChatRoomId = Convert.ToInt32(answer[5]);
                     break;
 
                 case TypeOfCommand.Return_Image_Of_User_Command:
@@ -171,6 +177,15 @@ namespace YoavDiscordServer
                     this.Username = answer[3];
                     this.MessageThatTheUserSent = answer[4];
                     this.TimeThatTheMessageWasSent = DateTime.Parse(answer[5]);
+                    this.ChatRoomId = Convert.ToInt32(answer[6]);
+                    break;
+
+                case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
+                    this.ChatRoomId = Convert.ToInt32(answer[1]);
+                    break;
+
+                case TypeOfCommand.Return_Messages_History_Of_Chat_Room_Command:
+                    this.MessagesOfAChatRoomJson = answer[1];
                     break;
             }
         }
@@ -230,18 +245,18 @@ namespace YoavDiscordServer
                     break;
 
 
-                case TypeOfCommand.Successes_Username_Not_In_The_System_Command:
-                case TypeOfCommand.Successes_Forgot_Password_Command:
+                case TypeOfCommand.Success_Username_Not_In_The_System_Command:
+                case TypeOfCommand.Success_Forgot_Password_Command:
                     break;
 
-                case TypeOfCommand.Successes_Connected_To_The_Application_Command:
+                case TypeOfCommand.Success_Connected_To_The_Application_Command:
                     toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
                     toSend += this.Username + "\n";
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
                     toSend += this.MessageThatTheUserSent + "\n";
-                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Message_From_Other_User_Command:
@@ -249,6 +264,7 @@ namespace YoavDiscordServer
                     toSend += this.UserId.ToString() + "\n";
                     toSend += this.MessageThatTheUserSent + "\n";
                     toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Fetch_Image_Of_User_Command:
@@ -256,6 +272,7 @@ namespace YoavDiscordServer
                     toSend += this.Username + "\n";
                     toSend += this.MessageThatTheUserSent + "\n";
                     toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Return_Image_Of_User_Command:
@@ -264,6 +281,15 @@ namespace YoavDiscordServer
                     toSend += this.Username + "\n";
                     toSend += this.MessageThatTheUserSent + "\n";
                     toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
+                    toSend += this.ChatRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
+                    toSend += this.ChatRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Return_Messages_History_Of_Chat_Room_Command:
+                    toSend += this.MessagesOfAChatRoomJson + "\n";
                     break;
 
             }

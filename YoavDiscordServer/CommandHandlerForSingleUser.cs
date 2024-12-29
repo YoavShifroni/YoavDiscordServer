@@ -92,17 +92,23 @@ namespace YoavDiscordServer
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
-                    this.HandleSendMessage(clientServerProtocol.MessageThatTheUserSent, clientServerProtocol.TimeThatTheMessageWasSent);
+                    this.HandleSendMessage(clientServerProtocol.MessageThatTheUserSent, clientServerProtocol.ChatRoomId);
                     break;
 
                 case TypeOfCommand.Fetch_Image_Of_User_Command:
                     this.HandleFetchImageOfUser(clientServerProtocol.UserId, clientServerProtocol.Username, clientServerProtocol.MessageThatTheUserSent,
-                        clientServerProtocol.TimeThatTheMessageWasSent);
+                        clientServerProtocol.TimeThatTheMessageWasSent, clientServerProtocol.ChatRoomId);
+                    break;
+
+                case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
+                    this.HandleGetMessagesHistoryOfChatRoom(clientServerProtocol.ChatRoomId);
                     break;
             }
         }
 
         
+
+
 
 
 
@@ -176,7 +182,7 @@ namespace YoavDiscordServer
                 this._connection.SendMessage(protocol.Generate());
                 return;
             }
-            protocol.TypeOfCommand = TypeOfCommand.Successes_Username_Not_In_The_System_Command;
+            protocol.TypeOfCommand = TypeOfCommand.Success_Username_Not_In_The_System_Command;
             this._connection.SendMessage(protocol.Generate());
         }
 
@@ -207,7 +213,7 @@ namespace YoavDiscordServer
             this._username = username;
             this._profilePicture = imageToByteArray;
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
-            clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Connected_To_The_Application_Command;
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
             clientServerProtocol.ProfilePicture = imageToByteArray;
             clientServerProtocol.Username = username;
             this._connection.SendMessage(clientServerProtocol.Generate());
@@ -268,7 +274,7 @@ namespace YoavDiscordServer
                 this.SendEmail(email, code);
                 this._logger = UserLogger.GetLoggerForUser(username);
                 this._logger.Info("Forgot password email sent");
-                clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Forgot_Password_Command;
+                clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Forgot_Password_Command;
             }
             this._connection.SendMessage(clientServerProtocol.Generate());
             
@@ -321,7 +327,7 @@ namespace YoavDiscordServer
                 this._sqlConnect.UpdatePassword(username, hashNewPassword);
                 this._logger = UserLogger.GetLoggerForUser(username);
                 this._logger.Info("Password updated successfully");
-                clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Connected_To_The_Application_Command;
+                clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
                 this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(username);
                 clientServerProtocol.ProfilePicture = this._profilePicture;
                 clientServerProtocol.Username = username;
@@ -333,20 +339,20 @@ namespace YoavDiscordServer
         private void HandleGetUsernameAndProfilePicture()
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
-            clientServerProtocol.TypeOfCommand = TypeOfCommand.Successes_Connected_To_The_Application_Command;
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
             this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(this._username);
             clientServerProtocol.ProfilePicture = this._profilePicture;
             clientServerProtocol.Username = this._username;
             this._connection.SendMessage(clientServerProtocol.Generate());
         }
 
-        private void HandleSendMessage(string messageThatTheUserSent, DateTime timeThatTheMessageWasSent)
+        private void HandleSendMessage(string messageThatTheUserSent, int chatRoomId)
         {
             ChatRoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this._username, messageThatTheUserSent,
-                timeThatTheMessageWasSent);
+                chatRoomId);
         }
 
-        private void HandleFetchImageOfUser(int userId, string username, string messageThatTheUserSent, DateTime time)
+        private void HandleFetchImageOfUser(int userId, string username, string messageThatTheUserSent, DateTime time, int chatRoomId)
         {
             byte[] someUserProfilePicture = this._sqlConnect.GetProfilePictureByUserId(userId);
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
@@ -356,7 +362,13 @@ namespace YoavDiscordServer
             clientServerProtocol.Username = username;
             clientServerProtocol.MessageThatTheUserSent = messageThatTheUserSent;
             clientServerProtocol.TimeThatTheMessageWasSent = time;
+            clientServerProtocol.ChatRoomId = chatRoomId;
             this._connection.SendMessage(clientServerProtocol.Generate());
+        }
+
+        private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId)
+        {
+            ChatRoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);
         }
     }
 }

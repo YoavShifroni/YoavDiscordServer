@@ -26,7 +26,7 @@ namespace YoavDiscordServer
 
             TcpListener listener = new TcpListener(IPAddress.Any, portNo);
 
-            
+
             Console.WriteLine("Server is ready.");
 
             // Start listen to incoming connection requests
@@ -51,6 +51,10 @@ namespace YoavDiscordServer
                     // ignoring the exception because its probably DOS error
                 }
             }
+
+
+
+
         }
     }
 }

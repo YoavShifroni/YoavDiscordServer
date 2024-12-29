@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static MongoDB.Driver.WriteConcern;
 
 namespace YoavDiscordServer
 {
@@ -116,13 +117,6 @@ namespace YoavDiscordServer
         }
 
 
-
-
-
-
-
-
-
         /// <summary>
         /// Receives a message from the client asynchronously and processes it when complete.
         /// </summary>
@@ -137,53 +131,7 @@ namespace YoavDiscordServer
                 int bytesRead = stream.EndRead(ar);
                 if (bytesRead > 0)
                 {
-                    // If message length is not set, read the first 4 bytes for message length
-                    if (this.messageLength == -1 && this.totalBytesRead < 4)
-                    {
-                        int remainingLengthBytes = 4 - this.totalBytesRead;
-                        int bytesToCopy = Math.Min(bytesRead, remainingLengthBytes);
-                        memoryStream.Write(this._data, 0, bytesToCopy);
-                        this.totalBytesRead += bytesToCopy;
-
-                        // Check if we have read the full length header
-                        if (this.totalBytesRead >= 4)
-                        {
-                            // Move the memory stream's read pointer to the beginning 
-                            this.memoryStream.Seek(0, SeekOrigin.Begin);
-                            byte[] lengthBytes = new byte[4];
-                            // Read 4 bytes from the memory stream into lengthBytes
-                            this.memoryStream.Read(lengthBytes, 0, 4);
-                            this.messageLength = BitConverter.ToInt32(lengthBytes, 0);
-                            // Reset memory stream to accumulate the rest of the message
-                            this.memoryStream.SetLength(0);
-                        }
-
-                        // If there’s more data in this chunk, process it as part of the message body
-                        if (bytesRead > bytesToCopy)
-                        {
-                            this.memoryStream.Write(this._data, bytesToCopy, bytesRead - bytesToCopy);
-                            this.totalBytesRead += bytesRead - bytesToCopy;
-                        }
-                    }
-                    else
-                    {
-                        // Accumulate message data into memory stream
-                        this.memoryStream.Write(this._data, 0, bytesRead);
-                        this.totalBytesRead += bytesRead;
-                    }
-
-                    // If we've accumulated the full message, process it
-                    if (this.messageLength > 0 && this.totalBytesRead >= this.messageLength + 4)
-                    {
-                        this._discordClientConnection.ProcessMessage(this.memoryStream.ToArray(), this.totalBytesRead - 4,
-                            this._isFirstMessage);
-                        this._isFirstMessage = false;
-
-                        // Reset properties for the next message
-                        this.messageLength = -1;
-                        this.totalBytesRead = 0;
-                        this.memoryStream.SetLength(0);
-                    }
+                    HandleReceivedMessage(bytesRead);
                 }
                 lock (this._client.GetStream())
                 {
@@ -194,8 +142,72 @@ namespace YoavDiscordServer
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 stream.Close();
                 this._discordClientConnection.CleanUpConnection();
+            }
+        }
+
+        private void HandleReceivedMessage(int bytesRead)
+        {
+            // If message length is not set, read the first 4 bytes for message length
+            if (this.messageLength == -1 && this.totalBytesRead < 4)
+            {
+                int remainingLengthBytes = 4 - this.totalBytesRead;
+                int bytesToCopy = Math.Min(bytesRead, remainingLengthBytes);
+                memoryStream.Write(this._data, 0, bytesToCopy);
+                this.totalBytesRead += bytesToCopy;
+                // Check if we have read the full length header
+                if (this.totalBytesRead >= 4)
+                {
+                    // Move the memory stream's read pointer to the beginning 
+                    this.memoryStream.Seek(0, SeekOrigin.Begin);
+                    byte[] lengthBytes = new byte[4];
+                    // Read 4 bytes from the memory stream into lengthBytes
+                    this.memoryStream.Read(lengthBytes, 0, 4);
+                    this.messageLength = BitConverter.ToInt32(lengthBytes, 0);
+                    // Reset memory stream to accumulate the rest of the message
+                    this.memoryStream.SetLength(0);
+                }
+
+                // If there’s more data in this chunk, process it as part of the message body
+                if (bytesRead > bytesToCopy)
+                {
+                    this.memoryStream.Write(this._data, bytesToCopy, bytesRead - bytesToCopy);
+                    this.totalBytesRead += bytesRead - bytesToCopy;
+                }
+            }
+            else
+            {
+                // Accumulate message data into memory stream
+                this.memoryStream.Write(this._data, this.totalBytesRead, bytesRead);
+                this.totalBytesRead += bytesRead;
+            }
+
+            // If we've accumulated the full message, process it
+            if (this.messageLength > 0 && this.totalBytesRead >= this.messageLength + 4)
+            {
+                this._discordClientConnection.ProcessMessage(this.memoryStream.ToArray(), this.messageLength,
+                    this._isFirstMessage);
+                this._isFirstMessage = false;
+
+                //At this point the memory stream can contain more messages
+                int lengthOfPrevMessage = this.messageLength + 4;
+                int remainingDataBytes = this.totalBytesRead - lengthOfPrevMessage;
+
+
+                // Reset properties for the next message
+                this.messageLength = -1;
+                this.totalBytesRead = 0;
+                this.memoryStream.SetLength(0);
+
+                if(remainingDataBytes > 0) //Handle the next message, if we have one
+                {
+                    byte[] newData = new byte[this._client.ReceiveBufferSize];
+                    Array.Copy(this._data, lengthOfPrevMessage, newData, 0, remainingDataBytes);
+                    this._data = newData;
+                    HandleReceivedMessage(remainingDataBytes);
+                }
             }
         }
 
