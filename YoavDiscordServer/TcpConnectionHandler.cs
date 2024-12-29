@@ -192,8 +192,7 @@ namespace YoavDiscordServer
                 this._isFirstMessage = false;
 
                 //At this point the memory stream can contain more messages
-                int lengthOfPrevMessage = this.messageLength + 4;
-                int remainingDataBytes = this.totalBytesRead - lengthOfPrevMessage;
+                int remainingDataBytes = this.totalBytesRead - (this.messageLength + 4);
 
 
                 // Reset properties for the next message
@@ -204,7 +203,7 @@ namespace YoavDiscordServer
                 if(remainingDataBytes > 0) //Handle the next message, if we have one
                 {
                     byte[] newData = new byte[this._client.ReceiveBufferSize];
-                    Array.Copy(this._data, lengthOfPrevMessage, newData, 0, remainingDataBytes);
+                    Array.Copy(this._data, bytesRead - remainingDataBytes, newData, 0, remainingDataBytes);
                     this._data = newData;
                     HandleReceivedMessage(remainingDataBytes);
                 }

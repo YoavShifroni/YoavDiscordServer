@@ -22,7 +22,7 @@ namespace YoavDiscordServer
 
         private const string DATA__BASE_NAME = "admin";
 
-        private const string DATA_BASE_IP = "16.171.173.209";
+        private const string DATA_BASE_IP = "16.170.218.195";
 
         private const string COLLECTION_NAME = "UserMessages";
 
@@ -56,7 +56,7 @@ namespace YoavDiscordServer
         {
             var collection = database.GetCollection<UserMessage>(COLLECTION_NAME);
             var filter = Builders<UserMessage>.Filter.Eq(e => e.ChatRoomId, chatRoomId);
-            var sort = Builders<UserMessage>.Sort.Descending(e => e.Time);
+            var sort = Builders<UserMessage>.Sort.Ascending(e => e.Time);
             return await collection.Find(filter).Sort(sort).ToListAsync();
         }
 
