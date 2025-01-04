@@ -22,7 +22,7 @@ namespace YoavDiscordServer
 
         private const string DATA__BASE_NAME = "admin";
 
-        private const string DATA_BASE_IP = "16.170.218.195";
+        private const string DATA_BASE_IP = "13.60.197.40";
 
         private const string COLLECTION_NAME = "UserMessages";
 

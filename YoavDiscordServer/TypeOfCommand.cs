@@ -30,5 +30,7 @@ namespace YoavDiscordServer
         Return_Image_Of_User_Command,
         Get_Messages_History_Of_Chat_Room_Command,
         Return_Messages_History_Of_Chat_Room_Command,
+        Connect_To_Media_Room_Command,
+        New_Participant_Join_The_Media_Room_Command,
     }
 }

@@ -103,10 +103,16 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
                     this.HandleGetMessagesHistoryOfChatRoom(clientServerProtocol.ChatRoomId);
                     break;
+
+                case TypeOfCommand.Connect_To_Media_Room_Command:
+                    this.HandleConnectToMediaRoom(clientServerProtocol.MediaRoomId);
+                    break;
             }
         }
 
-        
+       
+
+
 
 
 
@@ -348,7 +354,7 @@ namespace YoavDiscordServer
 
         private void HandleSendMessage(string messageThatTheUserSent, int chatRoomId)
         {
-            ChatRoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this._username, messageThatTheUserSent,
+            RoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this._username, messageThatTheUserSent,
                 chatRoomId);
         }
 
@@ -368,7 +374,14 @@ namespace YoavDiscordServer
 
         private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId)
         {
-            ChatRoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);
+            RoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);
+        }
+
+        private void HandleConnectToMediaRoom(int mediaRoomId)
+        {
+            MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
+            mediaRoom._usersInThisRoom.Add(this._userId);
+            RoomsManager.UpdateOthersWhenNewParticipantJoinTheMediaRoom(this._userId, mediaRoom);
         }
     }
 }

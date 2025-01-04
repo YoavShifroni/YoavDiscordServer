@@ -71,9 +71,13 @@ namespace YoavDiscordServer
 
         public int ChatRoomId { get; set; }
 
+        public int MediaRoomId { get; set; }
+
         public int UserId { get; set; }
 
-        public string MessagesOfAChatRoomJson {  get; set; }
+        public string MessagesOfAChatRoomJson { get; set; }
+
+        public string NewParticipantIp { get; set; }
 
         /// <summary>
         /// Empty constructor
@@ -187,6 +191,14 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Return_Messages_History_Of_Chat_Room_Command:
                     this.MessagesOfAChatRoomJson = answer[1];
                     break;
+
+                case TypeOfCommand.Connect_To_Media_Room_Command:
+                    this.MediaRoomId = Convert.ToInt32(answer[1]);
+                    break;
+
+                case TypeOfCommand.New_Participant_Join_The_Media_Room_Command:
+                    this.NewParticipantIp = answer[1];
+                    break;
             }
         }
 
@@ -290,6 +302,14 @@ namespace YoavDiscordServer
 
                 case TypeOfCommand.Return_Messages_History_Of_Chat_Room_Command:
                     toSend += this.MessagesOfAChatRoomJson + "\n";
+                    break;
+
+                case TypeOfCommand.Connect_To_Media_Room_Command:
+                    toSend += this.MediaRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.New_Participant_Join_The_Media_Room_Command:
+                    toSend += this.NewParticipantIp + "\n";
                     break;
 
             }

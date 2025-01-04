@@ -168,6 +168,32 @@ namespace YoavDiscordServer
             }
         }
 
+        public static string GetUserIpById(int userId)
+        {
+            foreach(DiscordClientConnection user in AllClients.Values)
+            {
+                if(user._commandHandlerForSingleUser._userId == userId)
+                {
+                    return user._clientIP;
+                }
+            }
+            return null;
+        }
+
+        public static DiscordClientConnection GetDiscordClientConnectionById(int userId)
+        {
+            foreach (DiscordClientConnection user in AllClients.Values)
+            {
+                if (user._commandHandlerForSingleUser._userId == userId)
+                {
+                    return user;
+                }
+            }
+            return null;
+        }
+
+
+
 
     }
 }
