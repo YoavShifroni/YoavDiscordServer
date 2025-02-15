@@ -64,7 +64,8 @@ namespace YoavDiscordServer
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.New_Participant_Join_The_Media_Room_Command;
             clientServerProtocol.NewParticipantIp = DiscordClientConnection.GetUserIpById(userId);
-            foreach (int user in mediaRoom._usersInThisRoom)
+            clientServerProtocol.MediaPort = mediaRoom.UsersInThisRoom[userId];
+            foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if(user != userId)
                 {
@@ -73,10 +74,57 @@ namespace YoavDiscordServer
                 }
                
 
-            }       
+            }      
+        }
 
+        public static void UpdateNewUserAboutTheCurrentUsersInTheMediaRoom(int userId, MediaRoom mediaRoom)
+        {
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command;
+            clientServerProtocol.AllTheConnectedUsersInSomeMediaRoomIpsJson = JsonConvert.SerializeObject(GetConnectedUsersDetails(userId, mediaRoom));
+            DiscordClientConnection newUser = DiscordClientConnection.GetDiscordClientConnectionById(userId);
+            newUser.SendMessage(clientServerProtocol.Generate());
         }
 
 
+        private static Dictionary<string, int> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
+        {
+            Dictionary<string, int> ipsAndPort = new Dictionary<string, int>();
+            foreach (int user in mediaRoom.UsersInThisRoom.Keys)
+            {
+                if(user != userId)
+                {
+                    ipsAndPort.Add(DiscordClientConnection.GetUserIpById(user), mediaRoom.UsersInThisRoom[user]);
+                }
+            }
+            return ipsAndPort;
+        }
+
+        public static void RemoveUserFromAllMediaRooms(int userId)
+        {
+            foreach(MediaRoom mediaRoom in MediaRooms)
+            {
+                mediaRoom.RemoveUser(userId);
+            }
+        }
+
+        public static void UpdateEveryoneTheSomeUserLeft(int userId, MediaRoom mediaRoom)
+        {
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Some_User_Left_The_Media_Room_Command;
+            clientServerProtocol.UserIp = DiscordClientConnection.GetUserIpById(userId);
+            foreach (int user in mediaRoom.UsersInThisRoom.Keys)
+            {
+                if (user != userId)
+                {
+                    DiscordClientConnection userInTheMediaRoom = DiscordClientConnection.GetDiscordClientConnectionById(user);
+                    userInTheMediaRoom.SendMessage(clientServerProtocol.Generate());
+                }
+
+
+            }
+            mediaRoom.RemoveUser(userId);
+
+        }
     }
 }

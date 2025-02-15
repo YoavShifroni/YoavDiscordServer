@@ -105,12 +105,18 @@ namespace YoavDiscordServer
                     break;
 
                 case TypeOfCommand.Connect_To_Media_Room_Command:
-                    this.HandleConnectToMediaRoom(clientServerProtocol.MediaRoomId);
+                    this.HandleConnectToMediaRoom(clientServerProtocol.MediaRoomId, clientServerProtocol.MediaPort);
+                    break;
+
+                case TypeOfCommand.Disconnect_From_Media_Room_Command:
+                    this.HandleDisconnectFromMediaRoom(clientServerProtocol.MediaRoomId);
                     break;
             }
         }
 
-       
+        
+
+
 
 
 
@@ -377,11 +383,25 @@ namespace YoavDiscordServer
             RoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);
         }
 
-        private void HandleConnectToMediaRoom(int mediaRoomId)
+        private void HandleConnectToMediaRoom(int mediaRoomId, int mediaPort)
         {
             MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
-            mediaRoom._usersInThisRoom.Add(this._userId);
+            mediaRoom.AddUser(this._userId, mediaPort);
             RoomsManager.UpdateOthersWhenNewParticipantJoinTheMediaRoom(this._userId, mediaRoom);
+            RoomsManager.UpdateNewUserAboutTheCurrentUsersInTheMediaRoom(this._userId, mediaRoom);
+        }
+
+
+        public void RemoveUserFromAllMediaRooms()
+        {
+            RoomsManager.RemoveUserFromAllMediaRooms(this._userId);
+        }
+
+        private void HandleDisconnectFromMediaRoom(int mediaRoomId)
+        {
+            MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
+            RoomsManager.UpdateEveryoneTheSomeUserLeft(this._userId, mediaRoom);
+
         }
     }
 }

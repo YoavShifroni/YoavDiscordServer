@@ -32,5 +32,8 @@ namespace YoavDiscordServer
         Return_Messages_History_Of_Chat_Room_Command,
         Connect_To_Media_Room_Command,
         New_Participant_Join_The_Media_Room_Command,
+        Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command,
+        Disconnect_From_Media_Room_Command,
+        Some_User_Left_The_Media_Room_Command,
     }
 }

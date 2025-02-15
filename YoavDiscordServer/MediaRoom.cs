@@ -10,31 +10,31 @@ namespace YoavDiscordServer
     {
         public int RoomId;
 
-        public List<int> _usersInThisRoom = new List<int>();
+        public Dictionary< int, int> UsersInThisRoom = new Dictionary< int, int>();
 
         public MediaRoom(int roomId) 
         {
             this.RoomId = roomId;
         }
 
-       
 
-        //public void AddUser(int userId)
-        //{
-        //    if (!this._usersInThisRoom.Contains(userId))
-        //    {
-        //        this._usersInThisRoom.Add(userId);
-        //    }
-        //}
 
-        //public void RemoveUser(int userId)
-        //{
-        //    if (this._usersInThisRoom.Contains(userId))
-        //    {
-        //        this._usersInThisRoom.Remove(userId);
-        //    }
-        //}
+        public void AddUser(int userId, int mediaPort)
+        {
+            if (!this.UsersInThisRoom.ContainsKey(userId))
+            {
+                this.UsersInThisRoom.Add(userId, mediaPort);
+            }
+        }
 
-        
+        public void RemoveUser(int userId)
+        {
+            if (this.UsersInThisRoom.ContainsKey(userId))
+            {
+                this.UsersInThisRoom.Remove(userId);
+            }
+        }
+
+
     }
 }

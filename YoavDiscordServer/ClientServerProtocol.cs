@@ -79,6 +79,13 @@ namespace YoavDiscordServer
 
         public string NewParticipantIp { get; set; }
 
+        public string AllTheConnectedUsersInSomeMediaRoomIpsJson { get; set; }
+
+        public int MediaPort { get; set; }
+
+
+        public string UserIp { get; set; }
+
         /// <summary>
         /// Empty constructor
         /// </summary>
@@ -194,10 +201,24 @@ namespace YoavDiscordServer
 
                 case TypeOfCommand.Connect_To_Media_Room_Command:
                     this.MediaRoomId = Convert.ToInt32(answer[1]);
+                    this.MediaPort = Convert.ToInt32(answer[2]);
                     break;
 
                 case TypeOfCommand.New_Participant_Join_The_Media_Room_Command:
                     this.NewParticipantIp = answer[1];
+                    this.MediaPort = Convert.ToInt32(answer[2]);
+                    break;
+
+                case TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command:
+                    this.AllTheConnectedUsersInSomeMediaRoomIpsJson = answer[1];
+                    break;
+
+                case TypeOfCommand.Disconnect_From_Media_Room_Command:
+                    this.MediaRoomId = Convert.ToInt32(answer[1]);
+                    break;
+
+                case TypeOfCommand.Some_User_Left_The_Media_Room_Command:
+                    this.UserIp = answer[1];
                     break;
             }
         }
@@ -306,10 +327,24 @@ namespace YoavDiscordServer
 
                 case TypeOfCommand.Connect_To_Media_Room_Command:
                     toSend += this.MediaRoomId.ToString() + "\n";
+                    toSend += this.MediaPort.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.New_Participant_Join_The_Media_Room_Command:
                     toSend += this.NewParticipantIp + "\n";
+                    toSend += this.MediaPort.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command:
+                    toSend += this.AllTheConnectedUsersInSomeMediaRoomIpsJson + "\n";
+                    break;
+
+                case TypeOfCommand.Disconnect_From_Media_Room_Command:
+                    toSend += this.MediaRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Some_User_Left_The_Media_Room_Command:
+                    toSend += this.UserIp + "\n";
                     break;
 
             }

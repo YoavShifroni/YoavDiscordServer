@@ -22,9 +22,9 @@ namespace YoavDiscordServer
 
 
         /// <summary>
-        /// The IP address of the connected client.
+        /// The IP and port address of the connected client.
         /// </summary>
-        private string _clientIP;
+        private IPEndPoint _clientIP;
 
         /// <summary>
         /// Timestamp of the client's last connection.
@@ -51,16 +51,13 @@ namespace YoavDiscordServer
             int count = 0;
 
             // Get the IP address of the client to register in our client list
-            this._clientIP = client.Client.RemoteEndPoint.ToString();
+            this._clientIP = client.Client.RemoteEndPoint as IPEndPoint;
 
             // DOS protection
             foreach (DictionaryEntry user in AllClients)
             {
-                string ipAndPort = (string)(user.Key);
-                int index = ipAndPort.LastIndexOf(':');
-                string ip = ipAndPort.Substring(0, index);
-                IPAddress newIp = IPAddress.Parse(((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString());
-                if (ip.Equals(newIp.ToString()))
+                bool sameIpAddress = IPAddress.Equals((IPEndPoint)client.Client.RemoteEndPoint, user.Key);
+                if (sameIpAddress)
                 {
                     DateTime time = ((DiscordClientConnection)user.Value)._lastConnect;
                     if ((DateTime.Now - time).TotalSeconds < 10)
@@ -142,6 +139,7 @@ namespace YoavDiscordServer
 
         public void CleanUpConnection()
         {
+            this._commandHandlerForSingleUser.RemoveUserFromAllMediaRooms();
             AllClients.Remove(this._clientIP);
         }
 
@@ -174,7 +172,7 @@ namespace YoavDiscordServer
             {
                 if(user._commandHandlerForSingleUser._userId == userId)
                 {
-                    return user._clientIP;
+                    return user._clientIP.Address.ToString();
                 }
             }
             return null;

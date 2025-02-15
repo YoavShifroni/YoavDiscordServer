@@ -9,7 +9,6 @@ D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.pdb
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\Newtonsoft.Json.dll
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\Newtonsoft.Json.xml
-D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDiscordServer.csproj.CopyComplete
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\NLog.dll
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\NLog.xml
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\nlog.config
@@ -47,3 +46,4 @@ D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\System.Text.Encod
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\System.Threading.Tasks.Extensions.xml
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\BouncyCastle.Cryptography.dll
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\BouncyCastle.Cryptography.xml
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDisc.7F1F675B.Up2Date
