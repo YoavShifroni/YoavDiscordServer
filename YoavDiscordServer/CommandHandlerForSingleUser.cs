@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace YoavDiscordServer
         private int _countLoginFailures;
 
 
-        private string _username;
+        public string Username;
 
         private byte[] _profilePicture;
 
@@ -48,6 +49,7 @@ namespace YoavDiscordServer
         /// The connection associated with the Discord client.
         /// </summary>
         private DiscordClientConnection _connection;
+
 
         /// <summary>
         /// Constructor with parameter
@@ -96,8 +98,7 @@ namespace YoavDiscordServer
                     break;
 
                 case TypeOfCommand.Fetch_Image_Of_User_Command:
-                    this.HandleFetchImageOfUser(clientServerProtocol.UserId, clientServerProtocol.Username, clientServerProtocol.MessageThatTheUserSent,
-                        clientServerProtocol.TimeThatTheMessageWasSent, clientServerProtocol.ChatRoomId);
+                    this.HandleFetchImageOfUser(clientServerProtocol.UserId);
                     break;
 
                 case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
@@ -111,16 +112,15 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Disconnect_From_Media_Room_Command:
                     this.HandleDisconnectFromMediaRoom(clientServerProtocol.MediaRoomId);
                     break;
+
+                case TypeOfCommand.Fetch_All_Users_Command:
+                    this.HandleFetchAllUsers();
+                    break;
+
+               
+
             }
         }
-
-        
-
-
-
-
-
-
 
 
 
@@ -155,7 +155,7 @@ namespace YoavDiscordServer
                 return;
             }
             this._countLoginFailures = 0;
-            this._username = username;
+            this.Username = username;
             string email = this._sqlConnect.GetEmail(username);
             string codeToEmail = this.GetRandomCode();
             this.SendEmail(email, codeToEmail);
@@ -222,13 +222,15 @@ namespace YoavDiscordServer
             }
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._userId = this._sqlConnect.InsertNewUser(username, hashPassword, firstName, lastName, email, city, gender, imageToByteArray);
-            this._username = username;
+            this.Username = username;
             this._profilePicture = imageToByteArray;
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
             clientServerProtocol.ProfilePicture = imageToByteArray;
             clientServerProtocol.Username = username;
+            clientServerProtocol.UserId = this._userId;
             this._connection.SendMessage(clientServerProtocol.Generate());
+            this.UpdateOthersAboutAllUsersStatus();
             this._logger = UserLogger.GetLoggerForUser(username);
             this._logger.Info("Successfully registered");
         }
@@ -281,7 +283,7 @@ namespace YoavDiscordServer
             }
             else
             {
-                this._username = username;
+                this.Username = username;
                 string email = this._sqlConnect.GetEmail(username);
                 this.SendEmail(email, code);
                 this._logger = UserLogger.GetLoggerForUser(username);
@@ -337,12 +339,15 @@ namespace YoavDiscordServer
             else
             {
                 this._sqlConnect.UpdatePassword(username, hashNewPassword);
+                this._userId = this._sqlConnect.GetUserId(username, hashNewPassword);
                 this._logger = UserLogger.GetLoggerForUser(username);
                 this._logger.Info("Password updated successfully");
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
                 this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(username);
                 clientServerProtocol.ProfilePicture = this._profilePicture;
                 clientServerProtocol.Username = username;
+                clientServerProtocol.UserId = this._userId;
+                this.UpdateOthersAboutAllUsersStatus();
             }
             this._connection.SendMessage(clientServerProtocol.Generate());
             
@@ -352,33 +357,31 @@ namespace YoavDiscordServer
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
-            this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(this._username);
+            this._profilePicture = this._sqlConnect.GetProfilePictureByUsername(this.Username);
             clientServerProtocol.ProfilePicture = this._profilePicture;
-            clientServerProtocol.Username = this._username;
+            clientServerProtocol.Username = this.Username;
+            clientServerProtocol.UserId = this._userId;
             this._connection.SendMessage(clientServerProtocol.Generate());
+            this.UpdateOthersAboutAllUsersStatus();
         }
 
         private void HandleSendMessage(string messageThatTheUserSent, int chatRoomId)
         {
-            RoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this._username, messageThatTheUserSent,
+            RoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this.Username, messageThatTheUserSent,
                 chatRoomId);
         }
 
-        private void HandleFetchImageOfUser(int userId, string username, string messageThatTheUserSent, DateTime time, int chatRoomId)
+        private void HandleFetchImageOfUser(int userId)
         {
             byte[] someUserProfilePicture = this._sqlConnect.GetProfilePictureByUserId(userId);
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Return_Image_Of_User_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.ProfilePicture = someUserProfilePicture;
-            clientServerProtocol.Username = username;
-            clientServerProtocol.MessageThatTheUserSent = messageThatTheUserSent;
-            clientServerProtocol.TimeThatTheMessageWasSent = time;
-            clientServerProtocol.ChatRoomId = chatRoomId;
             this._connection.SendMessage(clientServerProtocol.Generate());
         }
 
-        private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId)
+        private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId) 
         {
             RoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);
         }
@@ -387,21 +390,79 @@ namespace YoavDiscordServer
         {
             MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
             mediaRoom.AddUser(this._userId, mediaPort);
-            RoomsManager.UpdateOthersWhenNewParticipantJoinTheMediaRoom(this._userId, mediaRoom);
+            RoomsManager.UpdateOthersWhenNewParticipantJoinTheMediaRoom(this._userId,this.Username ,mediaRoom);
             RoomsManager.UpdateNewUserAboutTheCurrentUsersInTheMediaRoom(this._userId, mediaRoom);
-        }
-
-
-        public void RemoveUserFromAllMediaRooms()
-        {
-            RoomsManager.RemoveUserFromAllMediaRooms(this._userId);
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Join_Media_Channel_Command;
+            clientServerProtocol.UserId = this._userId;
+            clientServerProtocol.MediaRoomId = mediaRoomId;
+            clientServerProtocol.Username = this.Username;
+            clientServerProtocol.ProfilePicture = this._profilePicture;
+            DiscordClientConnection.SendMessageToAllUserExceptOne(this._userId, clientServerProtocol);
         }
 
         private void HandleDisconnectFromMediaRoom(int mediaRoomId)
         {
             MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
+            if (mediaRoom == null)
+            {
+                return;
+            }
             RoomsManager.UpdateEveryoneTheSomeUserLeft(this._userId, mediaRoom);
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Leave_Media_Channel_Command;
+            clientServerProtocol.UserId = this._userId;
+            clientServerProtocol.MediaRoomId = mediaRoomId;
+            DiscordClientConnection.SendMessageToAllUserExceptOne(this._userId, clientServerProtocol);
 
         }
+
+        public void RemoveUserFromAllMediaRooms()
+        {
+            this.HandleDisconnectFromMediaRoom(RoomsManager.GetMediaRoomIdForUser(this._userId));
+            this.UpdateOthersAboutAllUsersStatus();
+        }
+
+        private void HandleFetchAllUsers()
+        {
+            List<UserDetails> details = this.GetAccurateAllUsersDetails();
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Get_All_Users_Details_Command;
+            clientServerProtocol.AllUsersDetails = JsonConvert.SerializeObject(details);
+            this._connection.SendMessage(clientServerProtocol.Generate());
+        }  
+
+        private void UpdateOthersAboutAllUsersStatus()
+        {
+            List<UserDetails> details = this.GetAccurateAllUsersDetails();
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.Get_All_Users_Details_Command;
+            clientServerProtocol.AllUsersDetails = JsonConvert.SerializeObject(details);
+            DiscordClientConnection.SendMessageToAllUserExceptOne(this._userId, clientServerProtocol);
+        }
+
+
+        private List<UserDetails> GetAccurateAllUsersDetails()
+        {
+            List<UserDetails> details = this._sqlConnect.GetAllUsersDetails();
+            List<int> connectedIds = DiscordClientConnection.GetIdsOfAllConnectedUsers();
+            foreach (UserDetails userDetails in details)
+            {
+                userDetails.MediaChannelId = RoomsManager.GetMediaRoomIdForUser(userDetails.UserId);
+                if (connectedIds.Contains(userDetails.UserId))
+                {
+                    userDetails.Status = true;
+                }
+                else
+                {
+                    userDetails.Status = false;
+                }
+            }
+            return details;
+        }
+
+       
+
+
     }
 }

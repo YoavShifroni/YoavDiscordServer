@@ -59,12 +59,14 @@ namespace YoavDiscordServer
             return null;
         }
 
-        public static void UpdateOthersWhenNewParticipantJoinTheMediaRoom(int userId, MediaRoom mediaRoom)
+        public static void UpdateOthersWhenNewParticipantJoinTheMediaRoom(int userId, string username, MediaRoom mediaRoom)
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.New_Participant_Join_The_Media_Room_Command;
             clientServerProtocol.NewParticipantIp = DiscordClientConnection.GetUserIpById(userId);
             clientServerProtocol.MediaPort = mediaRoom.UsersInThisRoom[userId];
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.Username = username;
             foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if(user != userId)
@@ -87,26 +89,21 @@ namespace YoavDiscordServer
         }
 
 
-        private static Dictionary<string, int> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
+        private static Dictionary<string, Tuple<int, int, string>> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
         {
-            Dictionary<string, int> ipsAndPort = new Dictionary<string, int>();
+            Dictionary<string, Tuple<int, int, string>> ipsToPortUserIdAndUsername = new Dictionary<string, Tuple<int, int, string>>();
             foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if(user != userId)
                 {
-                    ipsAndPort.Add(DiscordClientConnection.GetUserIpById(user), mediaRoom.UsersInThisRoom[user]);
+                    ipsToPortUserIdAndUsername.Add(DiscordClientConnection.GetUserIpById(user), Tuple.Create(mediaRoom.UsersInThisRoom[user],
+                        user, DiscordClientConnection.GetDiscordClientConnectionById(user).CommandHandlerForSingleUser.Username));
                 }
             }
-            return ipsAndPort;
+            return ipsToPortUserIdAndUsername;
         }
 
-        public static void RemoveUserFromAllMediaRooms(int userId)
-        {
-            foreach(MediaRoom mediaRoom in MediaRooms)
-            {
-                mediaRoom.RemoveUser(userId);
-            }
-        }
+        
 
         public static void UpdateEveryoneTheSomeUserLeft(int userId, MediaRoom mediaRoom)
         {
@@ -125,6 +122,18 @@ namespace YoavDiscordServer
             }
             mediaRoom.RemoveUser(userId);
 
+        }
+
+        public static int GetMediaRoomIdForUser(int userId)
+        {
+            foreach(MediaRoom room in MediaRooms)
+            {
+                if (room.UsersInThisRoom.ContainsKey(userId))
+                {
+                    return room.RoomId;
+                }
+            }
+            return -1;
         }
     }
 }

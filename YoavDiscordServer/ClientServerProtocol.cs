@@ -86,6 +86,9 @@ namespace YoavDiscordServer
 
         public string UserIp { get; set; }
 
+        public string AllUsersDetails { get; set; }
+
+
         /// <summary>
         /// Empty constructor
         /// </summary>
@@ -159,36 +162,29 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Success_Connected_To_The_Application_Command:
                     this.ProfilePicture = Convert.FromBase64String(answer[1]);
                     this.Username = answer[2];
+                    this.UserId = Convert.ToInt32(answer[3]);
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
-                    this.MessageThatTheUserSent = answer[1];
+                    this.MessageThatTheUserSent = this.DecodeMessage(answer[1]);
                     this.ChatRoomId = Convert.ToInt32(answer[2]);
                     break;
 
                 case TypeOfCommand.Message_From_Other_User_Command:
                     this.Username = answer[1];
                     this.UserId = Convert.ToInt32(answer[2]);
-                    this.MessageThatTheUserSent = answer[3];
+                    this.MessageThatTheUserSent = this.DecodeMessage(answer[3]);
                     this.TimeThatTheMessageWasSent = DateTime.Parse(answer[4]);
                     this.ChatRoomId = Convert.ToInt32(answer[5]);
                     break;
 
                 case TypeOfCommand.Fetch_Image_Of_User_Command:
                     this.UserId = Convert.ToInt32(answer[1]);
-                    this.Username = answer[2];
-                    this.MessageThatTheUserSent = answer[3];
-                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[4]);
-                    this.ChatRoomId = Convert.ToInt32(answer[5]);
                     break;
 
                 case TypeOfCommand.Return_Image_Of_User_Command:
                     this.UserId = Convert.ToInt32(answer[1]);
                     this.ProfilePicture = Convert.FromBase64String(answer[2]);
-                    this.Username = answer[3];
-                    this.MessageThatTheUserSent = answer[4];
-                    this.TimeThatTheMessageWasSent = DateTime.Parse(answer[5]);
-                    this.ChatRoomId = Convert.ToInt32(answer[6]);
                     break;
 
                 case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
@@ -207,6 +203,8 @@ namespace YoavDiscordServer
                 case TypeOfCommand.New_Participant_Join_The_Media_Room_Command:
                     this.NewParticipantIp = answer[1];
                     this.MediaPort = Convert.ToInt32(answer[2]);
+                    this.UserId = Convert.ToInt32(answer[3]);
+                    this.Username = answer[4];
                     break;
 
                 case TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command:
@@ -220,6 +218,30 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Some_User_Left_The_Media_Room_Command:
                     this.UserIp = answer[1];
                     break;
+
+                case TypeOfCommand.Fetch_All_Users_Command:
+                    break;
+
+                case TypeOfCommand.Get_All_Users_Details_Command:
+                    this.AllUsersDetails = answer[1];
+                    break;
+
+
+                case TypeOfCommand.User_Join_Media_Channel_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.MediaRoomId = Convert.ToInt32(answer[2]);
+                    this.Username = answer[3];
+                    this.ProfilePicture = Convert.FromBase64String(answer[4]);
+                    break;
+
+
+                case TypeOfCommand.User_Leave_Media_Channel_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.MediaRoomId = Convert.ToInt32(answer[2]);
+                    break;
+
+
+
             }
         }
 
@@ -285,36 +307,29 @@ namespace YoavDiscordServer
                 case TypeOfCommand.Success_Connected_To_The_Application_Command:
                     toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
                     toSend += this.Username + "\n";
+                    toSend += this.UserId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
-                    toSend += this.MessageThatTheUserSent + "\n";
+                    toSend += this.EncodeMessage(this.MessageThatTheUserSent) + "\n";
                     toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Message_From_Other_User_Command:
                     toSend += this.Username + "\n";
                     toSend += this.UserId.ToString() + "\n";
-                    toSend += this.MessageThatTheUserSent + "\n";
+                    toSend += this.EncodeMessage(this.MessageThatTheUserSent) + "\n";
                     toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
                     toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Fetch_Image_Of_User_Command:
                     toSend += this.UserId.ToString() + "\n";
-                    toSend += this.Username + "\n";
-                    toSend += this.MessageThatTheUserSent + "\n";
-                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
-                    toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Return_Image_Of_User_Command:
                     toSend += this.UserId.ToString() + "\n";
                     toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
-                    toSend += this.Username + "\n";
-                    toSend += this.MessageThatTheUserSent + "\n";
-                    toSend += this.TimeThatTheMessageWasSent.ToString() + "\n";
-                    toSend += this.ChatRoomId.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Get_Messages_History_Of_Chat_Room_Command:
@@ -333,6 +348,8 @@ namespace YoavDiscordServer
                 case TypeOfCommand.New_Participant_Join_The_Media_Room_Command:
                     toSend += this.NewParticipantIp + "\n";
                     toSend += this.MediaPort.ToString() + "\n";
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.Username + "\n";
                     break;
 
                 case TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command:
@@ -347,9 +364,40 @@ namespace YoavDiscordServer
                     toSend += this.UserIp + "\n";
                     break;
 
+                case TypeOfCommand.Fetch_All_Users_Command:
+                    break;
+
+                case TypeOfCommand.Get_All_Users_Details_Command:
+                    toSend += this.AllUsersDetails + "\n";
+                    break;
+
+
+                case TypeOfCommand.User_Join_Media_Channel_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.MediaRoomId.ToString() + "\n";
+                    toSend += this.Username + "\n";
+                    toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
+                    break;
+
+
+                case TypeOfCommand.User_Leave_Media_Channel_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.MediaRoomId.ToString() + "\n";
+                    break;
+
             }
             toSend += "\r\n";
             return toSend;
+        }
+
+        private string EncodeMessage(string message)
+        {
+            return message.Replace(Environment.NewLine, "//n");
+        }
+
+        private string DecodeMessage(string message)
+        {
+            return message.Replace("//n", Environment.NewLine);
         }
     }
 }

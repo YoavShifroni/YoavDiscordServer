@@ -35,5 +35,9 @@ namespace YoavDiscordServer
         Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command,
         Disconnect_From_Media_Room_Command,
         Some_User_Left_The_Media_Room_Command,
+        Fetch_All_Users_Command,
+        Get_All_Users_Details_Command,
+        User_Join_Media_Channel_Command,
+        User_Leave_Media_Channel_Command,
     }
 }

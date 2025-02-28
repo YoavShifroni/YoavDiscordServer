@@ -203,5 +203,31 @@ namespace YoavDiscordServer
             command.ExecuteNonQuery();
             connection.Close();
         }
+
+        public List<UserDetails> GetAllUsersDetails()
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT Id, Username, ProfilePicture FROM Users";
+            connection.Open();
+            command.Connection = connection;
+            List<UserDetails> details = new List<UserDetails>();
+            SqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                while (reader.Read())
+                {
+                    details.Add(new UserDetails((int)reader["Id"], (string)reader["Username"], (byte[])reader["ProfilePicture"]));
+                }
+            }
+            finally
+            {
+                // Always call Close when done reading.
+                reader.Close();
+                connection.Close();
+            }
+            return details;
+        }
+
+
     }
 }

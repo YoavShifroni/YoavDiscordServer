@@ -36,7 +36,7 @@ namespace YoavDiscordServer
         /// <summary>
         /// Handler for processing commands for a single user.
         /// </summary>
-        private CommandHandlerForSingleUser _commandHandlerForSingleUser;
+        public CommandHandlerForSingleUser CommandHandlerForSingleUser;
 
         private TcpConnectionHandler _tcpConnectionHandler;
 
@@ -80,7 +80,7 @@ namespace YoavDiscordServer
             this._tcpConnectionHandler = new TcpConnectionHandler(client, this);
 
 
-            this._commandHandlerForSingleUser = new CommandHandlerForSingleUser(this);
+            this.CommandHandlerForSingleUser = new CommandHandlerForSingleUser(this);
             
             this._tcpConnectionHandler.StartListen();
         }
@@ -123,7 +123,7 @@ namespace YoavDiscordServer
                 for (int i = 0; i < lines.Length; i++)
                 {
                     Console.WriteLine(lines[i]);
-                    this._commandHandlerForSingleUser.HandleCommand(lines[i]);
+                    this.CommandHandlerForSingleUser.HandleCommand(lines[i]);
                 }
             }
         }
@@ -139,15 +139,17 @@ namespace YoavDiscordServer
 
         public void CleanUpConnection()
         {
-            this._commandHandlerForSingleUser.RemoveUserFromAllMediaRooms();
             AllClients.Remove(this._clientIP);
+
+            this.CommandHandlerForSingleUser.RemoveUserFromAllMediaRooms();
+
         }
 
         public static void SendMessageToAllUserExceptOne(int userIdToExclude, ClientServerProtocol protocol)
         {
             foreach (DiscordClientConnection user in AllClients.Values)
             {
-                if (user._commandHandlerForSingleUser._userId > 0 && user._commandHandlerForSingleUser._userId != userIdToExclude)
+                if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId != userIdToExclude)
                 {
                     user.SendMessage(protocol.Generate());
                 }
@@ -158,7 +160,7 @@ namespace YoavDiscordServer
         {
             foreach (DiscordClientConnection user in AllClients.Values)
             {
-                if (user._commandHandlerForSingleUser._userId > 0 && user._commandHandlerForSingleUser._userId == userId)
+                if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId == userId)
                 {
                     user.SendMessage(protocol.Generate());
                     return;
@@ -170,7 +172,7 @@ namespace YoavDiscordServer
         {
             foreach(DiscordClientConnection user in AllClients.Values)
             {
-                if(user._commandHandlerForSingleUser._userId == userId)
+                if(user.CommandHandlerForSingleUser._userId == userId)
                 {
                     return user._clientIP.Address.ToString();
                 }
@@ -182,12 +184,22 @@ namespace YoavDiscordServer
         {
             foreach (DiscordClientConnection user in AllClients.Values)
             {
-                if (user._commandHandlerForSingleUser._userId == userId)
+                if (user.CommandHandlerForSingleUser._userId == userId)
                 {
                     return user;
                 }
             }
             return null;
+        }
+
+        public static List<int> GetIdsOfAllConnectedUsers()
+        {
+            List<int> ids = new List<int>();
+            foreach(DiscordClientConnection user in AllClients.Values)
+            {
+                ids.Add(user.CommandHandlerForSingleUser._userId);
+            }
+            return ids;
         }
 
 
