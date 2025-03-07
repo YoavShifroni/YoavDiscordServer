@@ -94,6 +94,14 @@ namespace YoavDiscordServer
             this._tcpConnectionHandler.SendMessage(message);
         }
 
+        public void Broadcast(string message)
+        {
+            foreach (DiscordClientConnection user in AllClients.Values)
+            {
+                user.SendMessage(message);
+            }
+        }
+
 
 
         /// <summary>
@@ -149,7 +157,7 @@ namespace YoavDiscordServer
         {
             foreach (DiscordClientConnection user in AllClients.Values)
             {
-                if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId != userIdToExclude)
+                if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId != userIdToExclude && user.CommandHandlerForSingleUser.IsAuthenticated)
                 {
                     user.SendMessage(protocol.Generate());
                 }

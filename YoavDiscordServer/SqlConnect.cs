@@ -149,6 +149,23 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
+        /// The function return the current username of this user id
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public string GetUsernameById(int userId)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT Username FROM Users WHERE Id  = @userId";
+            command.Parameters.AddWithValue("@userId", userId);
+            connection.Open();
+            command.Connection = connection;
+            string b = (string)command.ExecuteScalar();
+            connection.Close();
+            return b;
+        }
+
+        /// <summary>
         /// The function return the user Id from his username and his password and on the way check if there is a registered
         /// user with this username and password
         /// </summary>

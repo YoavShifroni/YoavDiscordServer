@@ -39,5 +39,11 @@ namespace YoavDiscordServer
         Get_All_Users_Details_Command,
         User_Join_Media_Channel_Command,
         User_Leave_Media_Channel_Command,
+        Set_Mute_User_Command,
+        Set_Deafen_User_Command,
+        Disconnect_User_From_Media_Room_Command,
+        User_Muted_Command,
+        User_Deafened_Command,
+        User_Disconnected_Command,
     }
 }

@@ -7,6 +7,7 @@ using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using ZstdSharp.Unsafe;
 
 namespace YoavDiscordServer
 {
@@ -50,6 +51,8 @@ namespace YoavDiscordServer
         /// </summary>
         private DiscordClientConnection _connection;
 
+
+        public bool IsAuthenticated = false;   
 
         /// <summary>
         /// Constructor with parameter
@@ -117,14 +120,24 @@ namespace YoavDiscordServer
                     this.HandleFetchAllUsers();
                     break;
 
-               
+                case TypeOfCommand.Set_Mute_User_Command:
+                    this.HandleSetMuteUser(clientServerProtocol.UserId, clientServerProtocol.IsMuted);
+                    break;
+
+                case TypeOfCommand.Set_Deafen_User_Command:
+                    this.HandleSetDeafenUser(clientServerProtocol.UserId, clientServerProtocol.IsDeafened);
+                    break;
+
+                case TypeOfCommand.Disconnect_User_From_Media_Room_Command:
+                    this.HandleDisconnectUserFromMediaRoom(clientServerProtocol.UserId, clientServerProtocol.MediaRoomId);
+                    break;
+
+
 
             }
         }
 
-
-
-
+        
 
         /// <summary>
         /// Handles the login process, including validation and cooldowns for failed attempts.
@@ -233,6 +246,7 @@ namespace YoavDiscordServer
             this.UpdateOthersAboutAllUsersStatus();
             this._logger = UserLogger.GetLoggerForUser(username);
             this._logger.Info("Successfully registered");
+            this.IsAuthenticated = true;
         }
 
         /// <summary>
@@ -347,6 +361,7 @@ namespace YoavDiscordServer
                 clientServerProtocol.ProfilePicture = this._profilePicture;
                 clientServerProtocol.Username = username;
                 clientServerProtocol.UserId = this._userId;
+                this.IsAuthenticated = true;
                 this.UpdateOthersAboutAllUsersStatus();
             }
             this._connection.SendMessage(clientServerProtocol.Generate());
@@ -362,6 +377,7 @@ namespace YoavDiscordServer
             clientServerProtocol.Username = this.Username;
             clientServerProtocol.UserId = this._userId;
             this._connection.SendMessage(clientServerProtocol.Generate());
+            this.IsAuthenticated = true;
             this.UpdateOthersAboutAllUsersStatus();
         }
 
@@ -461,7 +477,77 @@ namespace YoavDiscordServer
             return details;
         }
 
-       
+        private void HandleSetMuteUser(int userId, bool isMuted)
+        {
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Muted_Command;
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.IsMuted = isMuted;
+            this._connection.Broadcast(clientServerProtocol.Generate());
+
+            // If the user is being muted and it's not the current user doing the muting, you might want to log this action
+            if (isMuted && userId != this._userId)
+            {
+                string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger.Info($"User {this.Username} muted user {targetUsername}");
+            }
+        }
+
+        
+        private void HandleSetDeafenUser(int userId, bool isDeafened)
+        {
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Deafened_Command;
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.IsDeafened = isDeafened;
+            this._connection.Broadcast(clientServerProtocol.Generate());
+
+            // Log this action if it's not self-deafening
+            if (isDeafened && userId != this._userId)
+            {
+                string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger.Info($"User {this.Username} deafened user {targetUsername}");
+            }
+        }
+
+        private void HandleDisconnectUserFromMediaRoom(int userId, int mediaRoomId)
+        {
+            // Check if the user is in the specified media room
+            MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
+            if (mediaRoom == null)
+            {
+                return; // Room doesn't exist
+            }
+
+            if (!mediaRoom.UsersInThisRoom.ContainsKey(userId))
+            {
+                return; // User is not in this room
+            }
+
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Disconnected_Command;
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.MediaRoomId = mediaRoomId;
+            this._connection.Broadcast(clientServerProtocol.Generate());
+            // Update the room's state - remove the user
+            RoomsManager.UpdateEveryoneTheSomeUserLeft(userId, mediaRoom);
+
+            // Log this action
+            if (userId != this._userId)
+            {
+                string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger.Info($"User {this.Username} disconnected user {targetUsername} from media room {mediaRoomId}");
+            }
+        }
+
+
+
+
+
+
+
+
+
 
 
     }

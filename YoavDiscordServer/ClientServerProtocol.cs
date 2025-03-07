@@ -88,6 +88,11 @@ namespace YoavDiscordServer
 
         public string AllUsersDetails { get; set; }
 
+        public bool IsMuted { get; set; }
+
+        public bool IsDeafened { get; set; }
+
+
 
         /// <summary>
         /// Empty constructor
@@ -240,6 +245,36 @@ namespace YoavDiscordServer
                     this.MediaRoomId = Convert.ToInt32(answer[2]);
                     break;
 
+                case TypeOfCommand.Set_Mute_User_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.IsMuted = Convert.ToBoolean(answer[2]);
+                    break;
+
+                case TypeOfCommand.Set_Deafen_User_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.IsDeafened = Convert.ToBoolean(answer[2]);
+                    break;
+
+                case TypeOfCommand.Disconnect_User_From_Media_Room_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.MediaRoomId = Convert.ToInt32(answer[2]);
+                    break;
+
+                case TypeOfCommand.User_Muted_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.IsMuted = Convert.ToBoolean(answer[2]);
+                    break;
+
+                case TypeOfCommand.User_Deafened_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.IsDeafened = Convert.ToBoolean(answer[2]);
+                    break;
+
+                case TypeOfCommand.User_Disconnected_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.MediaRoomId = Convert.ToInt32(answer[2]);
+                    break;
+
 
 
             }
@@ -381,6 +416,36 @@ namespace YoavDiscordServer
 
 
                 case TypeOfCommand.User_Leave_Media_Channel_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.MediaRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Set_Mute_User_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.IsMuted.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Set_Deafen_User_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.IsDeafened.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Disconnect_User_From_Media_Room_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.MediaRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.User_Muted_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.IsMuted.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.User_Deafened_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.IsDeafened.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.User_Disconnected_Command:
                     toSend += this.UserId.ToString() + "\n";
                     toSend += this.MediaRoomId.ToString() + "\n";
                     break;

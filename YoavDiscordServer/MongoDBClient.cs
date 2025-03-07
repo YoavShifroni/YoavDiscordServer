@@ -44,6 +44,7 @@ namespace YoavDiscordServer
             string connectionString = $"mongodb://admin:Qwer!234@{DATA_BASE_IP}:27017/{DATA__BASE_NAME}?authSource=admin&ssl=false";
             this.mongoClient = new MongoClient(connectionString);
             this.database = mongoClient.GetDatabase(DATA__BASE_NAME);
+
         }
 
         public async void InsertMessage(UserMessage userMessage)
