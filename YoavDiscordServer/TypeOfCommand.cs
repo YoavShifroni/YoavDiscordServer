@@ -45,5 +45,7 @@ namespace YoavDiscordServer
         User_Muted_Command,
         User_Deafened_Command,
         User_Disconnected_Command,
+        Set_Video_Mute_User_Command,
+        User_Video_Muted_Command,
     }
 }

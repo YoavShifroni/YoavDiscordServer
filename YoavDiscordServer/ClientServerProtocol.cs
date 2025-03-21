@@ -90,7 +90,11 @@ namespace YoavDiscordServer
 
         public bool IsMuted { get; set; }
 
+        public bool IsVideoMuted { get; set; }
+
         public bool IsDeafened { get; set; }
+
+        public int Role { get; set; }
 
 
 
@@ -168,6 +172,7 @@ namespace YoavDiscordServer
                     this.ProfilePicture = Convert.FromBase64String(answer[1]);
                     this.Username = answer[2];
                     this.UserId = Convert.ToInt32(answer[3]);
+                    this.Role = Convert.ToInt32(answer[4]);
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
@@ -237,6 +242,10 @@ namespace YoavDiscordServer
                     this.MediaRoomId = Convert.ToInt32(answer[2]);
                     this.Username = answer[3];
                     this.ProfilePicture = Convert.FromBase64String(answer[4]);
+                    this.Role = Convert.ToInt32(answer[5]);
+                    this.IsMuted = Convert.ToBoolean(answer[6]);
+                    this.IsDeafened = Convert.ToBoolean(answer[7]);
+                    this.IsVideoMuted = Convert.ToBoolean(answer[8]);
                     break;
 
 
@@ -273,6 +282,16 @@ namespace YoavDiscordServer
                 case TypeOfCommand.User_Disconnected_Command:
                     this.UserId = Convert.ToInt32(answer[1]);
                     this.MediaRoomId = Convert.ToInt32(answer[2]);
+                    break;
+
+                case TypeOfCommand.Set_Video_Mute_User_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.IsVideoMuted = Convert.ToBoolean(answer[2]);
+                    break;
+
+                case TypeOfCommand.User_Video_Muted_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.IsVideoMuted = Convert.ToBoolean(answer[2]);
                     break;
 
 
@@ -343,6 +362,7 @@ namespace YoavDiscordServer
                     toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
                     toSend += this.Username + "\n";
                     toSend += this.UserId.ToString() + "\n";
+                    toSend += this.Role.ToString() + "\n";
                     break;
 
                 case TypeOfCommand.Send_Message_Command:
@@ -412,6 +432,10 @@ namespace YoavDiscordServer
                     toSend += this.MediaRoomId.ToString() + "\n";
                     toSend += this.Username + "\n";
                     toSend += Convert.ToBase64String(this.ProfilePicture) + "\n";
+                    toSend += this.Role.ToString() + "\n";
+                    toSend += this.IsMuted.ToString() + "\n";
+                    toSend += this.IsDeafened.ToString() + "\n";
+                    toSend += this.IsVideoMuted.ToString() + "\n";
                     break;
 
 
@@ -448,6 +472,16 @@ namespace YoavDiscordServer
                 case TypeOfCommand.User_Disconnected_Command:
                     toSend += this.UserId.ToString() + "\n";
                     toSend += this.MediaRoomId.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.Set_Video_Mute_User_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.IsVideoMuted.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.User_Video_Muted_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.IsVideoMuted.ToString() + "\n";
                     break;
 
             }

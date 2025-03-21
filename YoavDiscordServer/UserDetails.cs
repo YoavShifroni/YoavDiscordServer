@@ -17,6 +17,8 @@ namespace YoavDiscordServer
 
         public int MediaChannelId = -1;
 
+        public int role;
+
         public bool Status;
 
         public UserDetails() 
@@ -24,11 +26,12 @@ namespace YoavDiscordServer
 
         }
 
-        public UserDetails(int userId, string username, byte[] picture)
+        public UserDetails(int userId, string username, byte[] picture, int role)
         {
             UserId = userId;
             Username = username;
             Picture = picture;
+            this.role = role;
         }
     }
 }

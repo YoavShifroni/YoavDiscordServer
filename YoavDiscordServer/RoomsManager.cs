@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +17,12 @@ namespace YoavDiscordServer
             new MediaRoom(2),
             new MediaRoom(3)
         };
+
+        private static Dictionary<int, bool> _userMuteStates = new Dictionary<int, bool>();
+
+        private static Dictionary<int, bool> _userDeafenStates = new Dictionary<int, bool>();
+
+        private static Dictionary<int, bool> _userVideoMuteStates = new Dictionary<int, bool>();
 
         public static void SendMessageThatTheUserSentToTheOtherUsers(int userId, string username, string message, int chatRoomId)
         {
@@ -89,15 +96,15 @@ namespace YoavDiscordServer
         }
 
 
-        private static Dictionary<string, Tuple<int, int, string>> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
+        private static Dictionary<string, Tuple<int, int, string, bool, bool, bool>> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
         {
-            Dictionary<string, Tuple<int, int, string>> ipsToPortUserIdAndUsername = new Dictionary<string, Tuple<int, int, string>>();
+            Dictionary<string, Tuple<int, int, string, bool, bool, bool>> ipsToPortUserIdAndUsername = new Dictionary<string, Tuple<int, int, string, bool, bool, bool>>();
             foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if(user != userId)
                 {
                     ipsToPortUserIdAndUsername.Add(DiscordClientConnection.GetUserIpById(user), Tuple.Create(mediaRoom.UsersInThisRoom[user],
-                        user, DiscordClientConnection.GetDiscordClientConnectionById(user).CommandHandlerForSingleUser.Username));
+                        user, DiscordClientConnection.GetDiscordClientConnectionById(user).CommandHandlerForSingleUser.Username, IsUserMuted(user), IsUserDeafened(user), IsUserVideoMuted(user)));
                 }
             }
             return ipsToPortUserIdAndUsername;
@@ -134,6 +141,36 @@ namespace YoavDiscordServer
                 }
             }
             return -1;
+        }
+
+        public static bool IsUserMuted(int userId)
+        {
+            return _userMuteStates.ContainsKey(userId) && _userMuteStates[userId];
+        }
+
+        public static bool IsUserDeafened(int userId)
+        {
+            return _userDeafenStates.ContainsKey(userId) && _userDeafenStates[userId];
+        }
+
+        public static bool IsUserVideoMuted(int userId)
+        {
+            return _userVideoMuteStates.ContainsKey(userId) && _userVideoMuteStates[userId];
+        }
+
+        public static void SetUserMuted(int userId, bool isMuted)
+        {
+            _userMuteStates[userId] = isMuted;
+        }
+
+        public static void SetUserDeafened(int userId, bool isDeafened)
+        {
+            _userDeafenStates[userId] = isDeafened;
+        }
+
+        public static void SetUserVideoMuted(int userId, bool isVideoMuted)
+        {
+            _userVideoMuteStates[userId] = isVideoMuted;
         }
     }
 }

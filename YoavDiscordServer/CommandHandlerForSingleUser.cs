@@ -52,7 +52,9 @@ namespace YoavDiscordServer
         private DiscordClientConnection _connection;
 
 
-        public bool IsAuthenticated = false;   
+        public bool IsAuthenticated = false;
+
+        private int role;
 
         /// <summary>
         /// Constructor with parameter
@@ -132,12 +134,18 @@ namespace YoavDiscordServer
                     this.HandleDisconnectUserFromMediaRoom(clientServerProtocol.UserId, clientServerProtocol.MediaRoomId);
                     break;
 
+                case TypeOfCommand.Set_Video_Mute_User_Command:
+                    this.HandleSetVideoMuteUser(clientServerProtocol.UserId, clientServerProtocol.IsVideoMuted);
+                    break;
+
 
 
             }
         }
 
         
+
+
 
         /// <summary>
         /// Handles the login process, including validation and cooldowns for failed attempts.
@@ -148,6 +156,7 @@ namespace YoavDiscordServer
         {
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._userId = this._sqlConnect.GetUserId(username, hashPassword);
+            this.role = this._sqlConnect.GetUserRole(this._userId);
             if (this._userId <= 0)
             {
                 this._countLoginFailures++;
@@ -237,11 +246,13 @@ namespace YoavDiscordServer
             this._userId = this._sqlConnect.InsertNewUser(username, hashPassword, firstName, lastName, email, city, gender, imageToByteArray);
             this.Username = username;
             this._profilePicture = imageToByteArray;
+            this.role = 2;
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
             clientServerProtocol.ProfilePicture = imageToByteArray;
             clientServerProtocol.Username = username;
             clientServerProtocol.UserId = this._userId;
+            clientServerProtocol.Role = this.role;
             this._connection.SendMessage(clientServerProtocol.Generate());
             this.UpdateOthersAboutAllUsersStatus();
             this._logger = UserLogger.GetLoggerForUser(username);
@@ -354,6 +365,7 @@ namespace YoavDiscordServer
             {
                 this._sqlConnect.UpdatePassword(username, hashNewPassword);
                 this._userId = this._sqlConnect.GetUserId(username, hashNewPassword);
+                this.role = this._sqlConnect.GetUserRole(this._userId);
                 this._logger = UserLogger.GetLoggerForUser(username);
                 this._logger.Info("Password updated successfully");
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
@@ -361,6 +373,7 @@ namespace YoavDiscordServer
                 clientServerProtocol.ProfilePicture = this._profilePicture;
                 clientServerProtocol.Username = username;
                 clientServerProtocol.UserId = this._userId;
+                clientServerProtocol.Role = this.role;
                 this.IsAuthenticated = true;
                 this.UpdateOthersAboutAllUsersStatus();
             }
@@ -376,6 +389,7 @@ namespace YoavDiscordServer
             clientServerProtocol.ProfilePicture = this._profilePicture;
             clientServerProtocol.Username = this.Username;
             clientServerProtocol.UserId = this._userId;
+            clientServerProtocol.Role = this.role;
             this._connection.SendMessage(clientServerProtocol.Generate());
             this.IsAuthenticated = true;
             this.UpdateOthersAboutAllUsersStatus();
@@ -414,6 +428,10 @@ namespace YoavDiscordServer
             clientServerProtocol.MediaRoomId = mediaRoomId;
             clientServerProtocol.Username = this.Username;
             clientServerProtocol.ProfilePicture = this._profilePicture;
+            clientServerProtocol.Role = this.role;
+            clientServerProtocol.IsMuted = RoomsManager.IsUserMuted(this._userId);
+            clientServerProtocol.IsDeafened = RoomsManager.IsUserDeafened(this._userId);
+            clientServerProtocol.IsVideoMuted = RoomsManager.IsUserVideoMuted(this._userId);
             DiscordClientConnection.SendMessageToAllUserExceptOne(this._userId, clientServerProtocol);
         }
 
@@ -479,13 +497,14 @@ namespace YoavDiscordServer
 
         private void HandleSetMuteUser(int userId, bool isMuted)
         {
+
+            RoomsManager.SetUserMuted(userId, isMuted);
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Muted_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsMuted = isMuted;
             this._connection.Broadcast(clientServerProtocol.Generate());
 
-            // If the user is being muted and it's not the current user doing the muting, you might want to log this action
             if (isMuted && userId != this._userId)
             {
                 string targetUsername = this._sqlConnect.GetUsernameById(userId);
@@ -496,6 +515,7 @@ namespace YoavDiscordServer
         
         private void HandleSetDeafenUser(int userId, bool isDeafened)
         {
+            RoomsManager.SetUserDeafened(userId, isDeafened);
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Deafened_Command;
             clientServerProtocol.UserId = userId;
@@ -543,7 +563,23 @@ namespace YoavDiscordServer
 
 
 
+        private void HandleSetVideoMuteUser(int userId, bool isVideoMuted)
+        {
+            RoomsManager.SetUserVideoMuted(userId, isVideoMuted);
 
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Video_Muted_Command;
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.IsVideoMuted = isVideoMuted;
+            this._connection.Broadcast(clientServerProtocol.Generate());
+
+            // Log this action if it's not self-muting
+            if (isVideoMuted && userId != this._userId)
+            {
+                string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger.Info($"User {this.Username} video muted user {targetUsername}");
+            }
+        }
 
 
 

@@ -224,7 +224,7 @@ namespace YoavDiscordServer
         public List<UserDetails> GetAllUsersDetails()
         {
             SqlCommand command = new SqlCommand();
-            command.CommandText = "SELECT Id, Username, ProfilePicture FROM Users";
+            command.CommandText = "SELECT Id, Username, ProfilePicture, Role FROM Users";
             connection.Open();
             command.Connection = connection;
             List<UserDetails> details = new List<UserDetails>();
@@ -233,7 +233,7 @@ namespace YoavDiscordServer
             {
                 while (reader.Read())
                 {
-                    details.Add(new UserDetails((int)reader["Id"], (string)reader["Username"], (byte[])reader["ProfilePicture"]));
+                    details.Add(new UserDetails((int)reader["Id"], (string)reader["Username"], (byte[])reader["ProfilePicture"], (int)reader["Role"]));
                 }
             }
             finally
@@ -245,6 +245,18 @@ namespace YoavDiscordServer
             return details;
         }
 
+
+        public int GetUserRole(int userId)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT Role FROM Users WHERE Id = @userId";
+            command.Parameters.AddWithValue("@userId", userId);
+            connection.Open();
+            command.Connection = connection;
+            int b = Convert.ToInt32(command.ExecuteScalar());
+            connection.Close();
+            return b;
+        }
 
     }
 }
