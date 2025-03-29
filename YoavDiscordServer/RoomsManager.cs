@@ -24,7 +24,17 @@ namespace YoavDiscordServer
 
         private static Dictionary<int, bool> _userVideoMuteStates = new Dictionary<int, bool>();
 
-        public static void SendMessageThatTheUserSentToTheOtherUsers(int userId, string username, string message, int chatRoomId)
+        public static async void HandleMessageSentFromUserInChat(int userId, string username, string message, int chatRoomId)
+        {
+            bool isDone = await BotManager.GetInstance().ProcessMessage(userId, username, message, chatRoomId);
+            if (!isDone)
+            {
+                //Send the message to all other users and store it in the MongoDB
+                StoreAndSendMessageToAllUsersButOne(userId, username, message, chatRoomId);
+            }
+        }
+
+        public static void StoreAndSendMessageToAllUsersButOne(int userId, string username, string message, int chatRoomId)
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Message_From_Other_User_Command;
@@ -42,7 +52,7 @@ namespace YoavDiscordServer
                 ChatRoomId = chatRoomId
             };
             MongoDBClient.GetInstance().InsertMessage(userMessage);
-            DiscordClientConnection.SendMessageToAllUserExceptOne(userId , clientServerProtocol);
+            DiscordClientConnection.SendMessageToAllUserExceptOne(userId, clientServerProtocol);
         }
 
         public static async void GetMessagesHistoryOfChatRoom(int userId, int chatRoomId)

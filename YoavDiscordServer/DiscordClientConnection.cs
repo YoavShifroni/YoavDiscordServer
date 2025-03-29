@@ -94,7 +94,7 @@ namespace YoavDiscordServer
             this._tcpConnectionHandler.SendMessage(message);
         }
 
-        public void Broadcast(string message)
+        public static void Broadcast(string message)
         {
             foreach (DiscordClientConnection user in AllClients.Values)
             {

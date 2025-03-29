@@ -47,5 +47,11 @@ namespace YoavDiscordServer
         User_Disconnected_Command,
         Set_Video_Mute_User_Command,
         User_Video_Muted_Command,
+        Update_User_Role_Command,
+        User_Role_Has_Been_Updated_Command,
+
+
+
+
     }
 }

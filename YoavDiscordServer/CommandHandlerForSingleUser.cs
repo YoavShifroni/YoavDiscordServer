@@ -54,7 +54,7 @@ namespace YoavDiscordServer
 
         public bool IsAuthenticated = false;
 
-        private int role;
+        public int Role;
 
         /// <summary>
         /// Constructor with parameter
@@ -138,12 +138,17 @@ namespace YoavDiscordServer
                     this.HandleSetVideoMuteUser(clientServerProtocol.UserId, clientServerProtocol.IsVideoMuted);
                     break;
 
+                case TypeOfCommand.Update_User_Role_Command:
+                    this.HandleUpdateUserRole(clientServerProtocol.UserId, clientServerProtocol.Role);
+                    break;
+
 
 
             }
         }
 
         
+
 
 
 
@@ -156,7 +161,7 @@ namespace YoavDiscordServer
         {
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._userId = this._sqlConnect.GetUserId(username, hashPassword);
-            this.role = this._sqlConnect.GetUserRole(this._userId);
+            this.Role = this._sqlConnect.GetUserRole(this._userId);
             if (this._userId <= 0)
             {
                 this._countLoginFailures++;
@@ -246,15 +251,16 @@ namespace YoavDiscordServer
             this._userId = this._sqlConnect.InsertNewUser(username, hashPassword, firstName, lastName, email, city, gender, imageToByteArray);
             this.Username = username;
             this._profilePicture = imageToByteArray;
-            this.role = 2;
+            this.Role = 2;
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
             clientServerProtocol.ProfilePicture = imageToByteArray;
             clientServerProtocol.Username = username;
             clientServerProtocol.UserId = this._userId;
-            clientServerProtocol.Role = this.role;
+            clientServerProtocol.Role = this.Role;
             this._connection.SendMessage(clientServerProtocol.Generate());
             this.UpdateOthersAboutAllUsersStatus();
+            BotManager.GetInstance().NotifyUserRegistered(this._userId, username);
             this._logger = UserLogger.GetLoggerForUser(username);
             this._logger.Info("Successfully registered");
             this.IsAuthenticated = true;
@@ -264,7 +270,7 @@ namespace YoavDiscordServer
         /// Hashes a string using SHA256.
         /// </summary>
         /// <param name="value"></param>
-        private static string CreateSha256(string value)
+        public static string CreateSha256(string value)
         {
             StringBuilder Sb = new StringBuilder();
 
@@ -365,7 +371,7 @@ namespace YoavDiscordServer
             {
                 this._sqlConnect.UpdatePassword(username, hashNewPassword);
                 this._userId = this._sqlConnect.GetUserId(username, hashNewPassword);
-                this.role = this._sqlConnect.GetUserRole(this._userId);
+                this.Role = this._sqlConnect.GetUserRole(this._userId);
                 this._logger = UserLogger.GetLoggerForUser(username);
                 this._logger.Info("Password updated successfully");
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Connected_To_The_Application_Command;
@@ -373,7 +379,7 @@ namespace YoavDiscordServer
                 clientServerProtocol.ProfilePicture = this._profilePicture;
                 clientServerProtocol.Username = username;
                 clientServerProtocol.UserId = this._userId;
-                clientServerProtocol.Role = this.role;
+                clientServerProtocol.Role = this.Role;
                 this.IsAuthenticated = true;
                 this.UpdateOthersAboutAllUsersStatus();
             }
@@ -389,7 +395,7 @@ namespace YoavDiscordServer
             clientServerProtocol.ProfilePicture = this._profilePicture;
             clientServerProtocol.Username = this.Username;
             clientServerProtocol.UserId = this._userId;
-            clientServerProtocol.Role = this.role;
+            clientServerProtocol.Role = this.Role;
             this._connection.SendMessage(clientServerProtocol.Generate());
             this.IsAuthenticated = true;
             this.UpdateOthersAboutAllUsersStatus();
@@ -397,7 +403,7 @@ namespace YoavDiscordServer
 
         private void HandleSendMessage(string messageThatTheUserSent, int chatRoomId)
         {
-            RoomsManager.SendMessageThatTheUserSentToTheOtherUsers(this._userId,this.Username, messageThatTheUserSent,
+            RoomsManager.HandleMessageSentFromUserInChat(this._userId,this.Username, messageThatTheUserSent,
                 chatRoomId);
         }
 
@@ -428,7 +434,7 @@ namespace YoavDiscordServer
             clientServerProtocol.MediaRoomId = mediaRoomId;
             clientServerProtocol.Username = this.Username;
             clientServerProtocol.ProfilePicture = this._profilePicture;
-            clientServerProtocol.Role = this.role;
+            clientServerProtocol.Role = this.Role;
             clientServerProtocol.IsMuted = RoomsManager.IsUserMuted(this._userId);
             clientServerProtocol.IsDeafened = RoomsManager.IsUserDeafened(this._userId);
             clientServerProtocol.IsVideoMuted = RoomsManager.IsUserVideoMuted(this._userId);
@@ -503,7 +509,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Muted_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsMuted = isMuted;
-            this._connection.Broadcast(clientServerProtocol.Generate());
+            DiscordClientConnection.Broadcast(clientServerProtocol.Generate());
 
             if (isMuted && userId != this._userId)
             {
@@ -520,7 +526,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Deafened_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsDeafened = isDeafened;
-            this._connection.Broadcast(clientServerProtocol.Generate());
+            DiscordClientConnection.Broadcast(clientServerProtocol.Generate());
 
             // Log this action if it's not self-deafening
             if (isDeafened && userId != this._userId)
@@ -548,7 +554,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Disconnected_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.MediaRoomId = mediaRoomId;
-            this._connection.Broadcast(clientServerProtocol.Generate());
+            DiscordClientConnection.Broadcast(clientServerProtocol.Generate());
             // Update the room's state - remove the user
             RoomsManager.UpdateEveryoneTheSomeUserLeft(userId, mediaRoom);
 
@@ -571,7 +577,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Video_Muted_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsVideoMuted = isVideoMuted;
-            this._connection.Broadcast(clientServerProtocol.Generate());
+            DiscordClientConnection.Broadcast(clientServerProtocol.Generate());
 
             // Log this action if it's not self-muting
             if (isVideoMuted && userId != this._userId)
@@ -583,6 +589,39 @@ namespace YoavDiscordServer
 
 
 
+        private void HandleUpdateUserRole(int userId, int newRole)
+        {
+            int userCurrentRole = this._sqlConnect.GetUserRole(userId);
+            bool canUpdateRole = false;
+            if (this.Role == 0) // Admin
+            {
+                canUpdateRole = (userCurrentRole == 1 && newRole == 2) || (userCurrentRole == 2 && newRole == 1);
+            }
+            else if (this.Role == 1) // Moderator
+            {
+                canUpdateRole = (userCurrentRole == 2 && newRole == 1);
+            }
+
+            if (!canUpdateRole)
+            {
+                // Send error message if the user doesn't have permission
+                ClientServerProtocol errorProtocol = new ClientServerProtocol();
+                errorProtocol.TypeOfCommand = TypeOfCommand.Error_Command;
+                errorProtocol.ErrorMessage = "You don't have permission to update this user's role.";
+                this._connection.SendMessage(errorProtocol.Generate());
+                return;
+            }
+
+
+            this._sqlConnect.UpdateUserRole(userId, newRole);
+            DiscordClientConnection.GetDiscordClientConnectionById(userId).CommandHandlerForSingleUser.Role = newRole;
+            ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
+            clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Role_Has_Been_Updated_Command;
+            clientServerProtocol.UserId = userId;
+            clientServerProtocol.Role = newRole;
+            DiscordClientConnection.Broadcast(clientServerProtocol.Generate());
+            this.UpdateOthersAboutAllUsersStatus();
+        }
 
 
 

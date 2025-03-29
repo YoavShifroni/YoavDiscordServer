@@ -88,6 +88,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
       <Private>True</Private>
@@ -164,7 +165,10 @@
   <ItemGroup>
     <Compile Include="AesFunctions.cs" />
     <Compile Include="AesKeys.cs" />
+    <Compile Include="Bot.cs" />
+    <Compile Include="BotManager.cs" />
     <Compile Include="MediaRoom.cs" />
+    <Compile Include="ModerationBot.cs" />
     <Compile Include="RoomsManager.cs" />
     <Compile Include="ClientServerProtocol.cs" />
     <Compile Include="CommandHandlerForSingleUser.cs" />
@@ -175,6 +179,7 @@
     <Compile Include="RsaFunctions.cs" />
     <Compile Include="SqlConnect.cs" />
     <Compile Include="TcpConnectionHandler.cs" />
+    <Compile Include="TranslateBot.cs" />
     <Compile Include="TypeOfCommand.cs" />
     <Compile Include="UserDetails.cs" />
     <Compile Include="UserLogger.cs" />

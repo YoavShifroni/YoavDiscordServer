@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Driver.Core.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -258,5 +259,72 @@ namespace YoavDiscordServer
             return b;
         }
 
+        public void UpdateUserRole(int userId, int newRole)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "UPDATE Users SET Role = @newRole WHERE Id = @userId ";
+            command.Parameters.AddWithValue("@newRole", newRole);
+            command.Parameters.AddWithValue("@userId", userId);
+            connection.Open();
+            command.Connection = connection;
+            command.ExecuteNonQuery();
+            connection.Close();
+        }
+
+        /// <summary>
+        /// Gets a user ID by username
+        /// </summary>
+        /// <param name="username">Username</param>
+        /// <returns>User ID, or -1 if not found</returns>
+        public int GetUserIdByUsername(string username)
+        {
+            SqlCommand command = new SqlCommand();
+            command.CommandText = "SELECT Id FROM Users WHERE Username = @username";
+            command.Parameters.AddWithValue("@username", username);
+            connection.Open();
+            command.Connection = connection;
+            int b = Convert.ToInt32(command.ExecuteScalar());
+            connection.Close();
+            return b;
+        }
+
+        /// <summary>
+        /// Inserts a new bot user into the database
+        /// </summary>
+        /// <param name="username">Bot username</param>
+        /// <param name="password">Bot password (hashed)</param>
+        /// <param name="firstName">Bot first name (type)</param>
+        /// <param name="lastName">Bot last name</param>
+        /// <param name="email">Bot email</param>
+        /// <param name="city">Bot city</param>
+        /// <param name="gender">Bot gender</param>
+        /// <param name="profilePicture">Bot profile picture</param>
+        /// <param name="role">Bot role (3 = bot)</param>
+        /// <returns>The new bot's user ID</returns>
+        public int InsertNewBot(string username, string password, string firstName, string lastName, string email,
+            string city, string gender, byte[] profilePicture, int role)
+        {
+            string hashedPassword = CommandHandlerForSingleUser.CreateSha256(password);
+            string query = "INSERT INTO Users (Username, Password, FirstName, LastName, Email, City, Gender, ProfilePicture, Role) VALUES (@username, @password, @firstname, @lastname, @email, @city, @gender, @profilePicture, @role)";
+            SqlCommand command = new SqlCommand();
+            command.CommandText = query;
+            command.Parameters.AddWithValue("@username", username);
+            command.Parameters.AddWithValue("@password", hashedPassword);
+            command.Parameters.AddWithValue("@firstname", firstName);
+            command.Parameters.AddWithValue("@lastname", lastName);
+            command.Parameters.AddWithValue("@email", email);
+            command.Parameters.AddWithValue("@city", city);
+            command.Parameters.AddWithValue("@gender", gender);
+            command.Parameters.AddWithValue("@profilePicture", profilePicture);
+            command.Parameters.AddWithValue("@role", role);
+            connection.Open();
+            command.Connection = connection;
+            int id = command.ExecuteNonQuery();
+            Console.WriteLine("New Bot Id is: " + id);
+            connection.Close();
+            return id;
+        }
     }
+
 }
+

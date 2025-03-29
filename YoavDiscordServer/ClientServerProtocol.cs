@@ -97,7 +97,6 @@ namespace YoavDiscordServer
         public int Role { get; set; }
 
 
-
         /// <summary>
         /// Empty constructor
         /// </summary>
@@ -295,6 +294,18 @@ namespace YoavDiscordServer
                     break;
 
 
+                case TypeOfCommand.Update_User_Role_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.Role = Convert.ToInt32(answer[2]);
+                    break;
+
+                case TypeOfCommand.User_Role_Has_Been_Updated_Command:
+                    this.UserId = Convert.ToInt32(answer[1]);
+                    this.Role = Convert.ToInt32(answer[2]);
+                    break;
+
+
+
 
             }
         }
@@ -483,6 +494,18 @@ namespace YoavDiscordServer
                     toSend += this.UserId.ToString() + "\n";
                     toSend += this.IsVideoMuted.ToString() + "\n";
                     break;
+
+                case TypeOfCommand.Update_User_Role_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.Role.ToString() + "\n";
+                    break;
+
+                case TypeOfCommand.User_Role_Has_Been_Updated_Command:
+                    toSend += this.UserId.ToString() + "\n";
+                    toSend += this.Role.ToString() + "\n";
+                    break;
+
+
 
             }
             toSend += "\r\n";
