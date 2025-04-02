@@ -18,8 +18,8 @@ namespace YoavDiscordServer
         // Dictionary of supported languages with their codes
         private Dictionary<string, string> _supportedLanguages;
 
-        // API key for Google Translate API (replace with your own)
-        private const string API_KEY = "YOUR_GOOGLE_TRANSLATE_API_KEY";
+        // API key for Google Translate API
+        private readonly string API_KEY = ApiConfig.GetGoogleApiKey();
 
         // HttpClient for API calls
         private HttpClient _httpClient;

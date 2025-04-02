@@ -165,12 +165,14 @@
   <ItemGroup>
     <Compile Include="AesFunctions.cs" />
     <Compile Include="AesKeys.cs" />
+    <Compile Include="ApiConfig.cs" />
     <Compile Include="Bot.cs" />
     <Compile Include="BotManager.cs" />
+    <Compile Include="ClientServerProtocolParser.cs" />
     <Compile Include="MediaRoom.cs" />
     <Compile Include="ModerationBot.cs" />
     <Compile Include="RoomsManager.cs" />
-    <Compile Include="ClientServerProtocol.cs" />
+    <Compile Include="Data Objects\ClientServerProtocol.cs" />
     <Compile Include="CommandHandlerForSingleUser.cs" />
     <Compile Include="DiscordClientConnection.cs" />
     <Compile Include="MongoDBClient.cs" />
@@ -181,12 +183,16 @@
     <Compile Include="TcpConnectionHandler.cs" />
     <Compile Include="TranslateBot.cs" />
     <Compile Include="TypeOfCommand.cs" />
-    <Compile Include="UserDetails.cs" />
+    <Compile Include="Data Objects\UserDetails.cs" />
     <Compile Include="UserLogger.cs" />
-    <Compile Include="UserMessage.cs" />
+    <Compile Include="Data Objects\UserMediaConnectionDetails.cs" />
+    <Compile Include="Data Objects\UserMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="AppSettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

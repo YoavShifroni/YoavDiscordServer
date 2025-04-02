@@ -60,7 +60,7 @@ namespace YoavDiscordServer
             List<UserMessage> messages = await MongoDBClient.GetInstance().GetAllMessageOfChatRoom(chatRoomId);
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Return_Messages_History_Of_Chat_Room_Command;
-            clientServerProtocol.MessagesOfAChatRoomJson = JsonConvert.SerializeObject(messages);
+            clientServerProtocol.MessagesOfAChatRoom = messages;
             DiscordClientConnection.SendMessageToSpecificUser(userId , clientServerProtocol);
         }
 
@@ -89,7 +89,7 @@ namespace YoavDiscordServer
                 if(user != userId)
                 {
                     DiscordClientConnection userInTheMediaRoom = DiscordClientConnection.GetDiscordClientConnectionById(user);
-                    userInTheMediaRoom.SendMessage(clientServerProtocol.Generate());
+                    userInTheMediaRoom.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
                 }
                
 
@@ -100,20 +100,20 @@ namespace YoavDiscordServer
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command;
-            clientServerProtocol.AllTheConnectedUsersInSomeMediaRoomIpsJson = JsonConvert.SerializeObject(GetConnectedUsersDetails(userId, mediaRoom));
+            clientServerProtocol.UsersMediaConnectionDetails = GetConnectedUsersDetails(userId, mediaRoom);
             DiscordClientConnection newUser = DiscordClientConnection.GetDiscordClientConnectionById(userId);
-            newUser.SendMessage(clientServerProtocol.Generate());
+            newUser.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
         }
 
 
-        private static Dictionary<string, Tuple<int, int, string, bool, bool, bool>> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
+        private static List<UserMediaConnectionDetails> GetConnectedUsersDetails(int userId, MediaRoom mediaRoom)
         {
-            Dictionary<string, Tuple<int, int, string, bool, bool, bool>> ipsToPortUserIdAndUsername = new Dictionary<string, Tuple<int, int, string, bool, bool, bool>>();
+            List<UserMediaConnectionDetails> ipsToPortUserIdAndUsername = new List<UserMediaConnectionDetails>();
             foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if(user != userId)
                 {
-                    ipsToPortUserIdAndUsername.Add(DiscordClientConnection.GetUserIpById(user), Tuple.Create(mediaRoom.UsersInThisRoom[user],
+                    ipsToPortUserIdAndUsername.Add(new UserMediaConnectionDetails(DiscordClientConnection.GetUserIpById(user), mediaRoom.UsersInThisRoom[user],
                         user, DiscordClientConnection.GetDiscordClientConnectionById(user).CommandHandlerForSingleUser.Username, IsUserMuted(user), IsUserDeafened(user), IsUserVideoMuted(user)));
                 }
             }
@@ -132,7 +132,7 @@ namespace YoavDiscordServer
                 if (user != userId)
                 {
                     DiscordClientConnection userInTheMediaRoom = DiscordClientConnection.GetDiscordClientConnectionById(user);
-                    userInTheMediaRoom.SendMessage(clientServerProtocol.Generate());
+                    userInTheMediaRoom.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
                 }
 
 

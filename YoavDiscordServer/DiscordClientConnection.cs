@@ -126,7 +126,7 @@ namespace YoavDiscordServer
             else
             {
                 commandRecive = AesFunctions.Decrypt(commandRecive);
-                string[] stringSeparators = new string[] { "\r\n" };
+                string[] stringSeparators = new string[] { ClientServerProtocolParser.MessageTrailingDelimiter };
                 string[] lines = commandRecive.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 0; i < lines.Length; i++)
                 {
@@ -159,7 +159,7 @@ namespace YoavDiscordServer
             {
                 if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId != userIdToExclude && user.CommandHandlerForSingleUser.IsAuthenticated)
                 {
-                    user.SendMessage(protocol.Generate());
+                    user.SendMessage(ClientServerProtocolParser.Generate(protocol));
                 }
             }
         }
@@ -170,7 +170,7 @@ namespace YoavDiscordServer
             {
                 if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId == userId)
                 {
-                    user.SendMessage(protocol.Generate());
+                    user.SendMessage(ClientServerProtocolParser.Generate(protocol));
                     return;
                 }
             }

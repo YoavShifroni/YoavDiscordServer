@@ -47,3 +47,4 @@ D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\System.Threading.
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\BouncyCastle.Cryptography.dll
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\BouncyCastle.Cryptography.xml
 D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\obj\Debug\YoavDisc.7F1F675B.Up2Date
+D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\bin\Debug\AppSettings.json
