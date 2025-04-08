@@ -112,7 +112,6 @@ namespace YoavDiscordServer
         public void ProcessMessage(byte[] messageData, int bytesRead, bool isFirstMessage)
         {
             string commandRecive = System.Text.Encoding.UTF8.GetString(messageData, 0, bytesRead);
-            Console.WriteLine("commandRecive: " + commandRecive);
 
             if (isFirstMessage)
             {
@@ -130,31 +129,31 @@ namespace YoavDiscordServer
                 string[] lines = commandRecive.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    Console.WriteLine(lines[i]);
                     this.CommandHandlerForSingleUser.HandleCommand(lines[i]);
                 }
             }
         }
 
-        /// <summary>
-        /// Closes the client connection and removes it from the list of active clients.
-        /// </summary>
-        public void Close()
-        {
-            AllClients.Remove(this._clientIP);
-            this._tcpConnectionHandler.Close();
-        }
+       
 
         public void CleanUpConnection()
         {
-            AllClients.Remove(this._clientIP);
+            try
+            {
+                AllClients.Remove(this._clientIP);
 
-            this.CommandHandlerForSingleUser.RemoveUserFromAllMediaRooms();
+                this.CommandHandlerForSingleUser.RemoveUserFromAllMediaRooms();
+            }
+            catch
+            {
+                // ignore
+            }
 
         }
 
         public static void SendMessageToAllUserExceptOne(int userIdToExclude, ClientServerProtocol protocol)
         {
+            Console.WriteLine("Message sent to clients: " + protocol.ToString());
             foreach (DiscordClientConnection user in AllClients.Values)
             {
                 if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId != userIdToExclude && user.CommandHandlerForSingleUser.IsAuthenticated)
@@ -170,6 +169,7 @@ namespace YoavDiscordServer
             {
                 if (user.CommandHandlerForSingleUser._userId > 0 && user.CommandHandlerForSingleUser._userId == userId)
                 {
+                    Console.WriteLine("Message sent to client: " + protocol.ToString());
                     user.SendMessage(ClientServerProtocolParser.Generate(protocol));
                     return;
                 }
@@ -210,8 +210,17 @@ namespace YoavDiscordServer
             return ids;
         }
 
-
-
-
+        public static bool CheckIfUserAlreadyConnected(int userId)
+        {
+            int count = 0;
+            foreach(DiscordClientConnection user in AllClients.Values)
+            {
+                if(user.CommandHandlerForSingleUser._userId == userId)
+                {
+                    count++;
+                }
+            }
+            return count >= 2;
+        }
     }
 }

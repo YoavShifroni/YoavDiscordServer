@@ -32,6 +32,8 @@ namespace YoavDiscordServer
             // Start listen to incoming connection requests
             listener.Start();
 
+            BotManager.GetInstance();
+
 
             // infinit loop.
             while (true)

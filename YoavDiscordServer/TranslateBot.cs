@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -75,50 +76,98 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
-        /// Gets the default avatar for the bot
+        /// Gets the default avatar for the translation bot
         /// </summary>
         protected override byte[] GetDefaultBotAvatar()
         {
             try
             {
-                // Create an avatar with a globe icon for the translation bot
+                // Create an avatar for the translation bot
                 using (Bitmap botAvatar = new Bitmap(200, 200))
                 {
                     using (Graphics g = Graphics.FromImage(botAvatar))
                     {
-                        // Fill background with a teal color
-                        g.Clear(Color.FromArgb(0, 128, 128)); // Teal
-
-                        // Draw a circle for the globe
+                        // Set high quality rendering
                         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                        using (var brush = new SolidBrush(Color.FromArgb(173, 216, 230))) // Light blue
+                        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+
+                        // Fill background with a gradient from blue to purple (translation colors)
+                        using (LinearGradientBrush gradientBrush = new LinearGradientBrush(
+                            new Rectangle(0, 0, 200, 200),
+                            Color.FromArgb(41, 128, 185), // Blue
+                            Color.FromArgb(142, 68, 173), // Purple
+                            45f))
                         {
-                            g.FillEllipse(brush, 50, 50, 100, 100);
+                            g.FillRectangle(gradientBrush, 0, 0, 200, 200);
                         }
 
-                        // Draw latitude lines
-                        using (var pen = new Pen(Color.FromArgb(0, 64, 64), 2))
+                        // Draw circular background for the icon
+                        using (var circleBrush = new SolidBrush(Color.FromArgb(240, 240, 240)))
                         {
-                            g.DrawLine(pen, 50, 100, 150, 100); // Equator
-                            g.DrawLine(pen, 60, 70, 140, 70); // Upper parallel
-                            g.DrawLine(pen, 60, 130, 140, 130); // Lower parallel
+                            g.FillEllipse(circleBrush, 25, 25, 150, 150);
                         }
 
-                        // Draw longitude lines
-                        using (var pen = new Pen(Color.FromArgb(0, 64, 64), 2))
+                        // Draw speech bubbles representing translation
+                        // First speech bubble (left-to-right languages)
+                        using (var leftBubbleBrush = new SolidBrush(Color.FromArgb(52, 152, 219))) // Blue
                         {
-                            g.DrawLine(pen, 100, 50, 100, 150); // Prime meridian
-                            g.DrawArc(pen, 50, 50, 100, 100, 150, 60); // Left curve
-                            g.DrawArc(pen, 50, 50, 100, 100, 330, 60); // Right curve
+                            // Draw bubble shape
+                            g.FillEllipse(leftBubbleBrush, 40, 60, 70, 50);
+
+                            // Draw tail of speech bubble
+                            Point[] tailPoints = new Point[] {
+                        new Point(50, 110),
+                        new Point(40, 125),
+                        new Point(65, 105)
+                    };
+                            g.FillPolygon(leftBubbleBrush, tailPoints);
                         }
 
-                        // Draw "T" for Translate
-                        using (Font font = new Font("Arial", 36, FontStyle.Bold))
+                        // Second speech bubble (right-to-left languages)
+                        using (var rightBubbleBrush = new SolidBrush(Color.FromArgb(155, 89, 182))) // Purple
+                        {
+                            // Draw bubble shape
+                            g.FillEllipse(rightBubbleBrush, 90, 80, 70, 50);
+
+                            // Draw tail of speech bubble
+                            Point[] tailPoints = new Point[] {
+                        new Point(150, 130),
+                        new Point(160, 145),
+                        new Point(135, 125)
+                    };
+                            g.FillPolygon(rightBubbleBrush, tailPoints);
+                        }
+
+                        // Draw text symbols in the speech bubbles
+                        using (Font fontA = new Font("Arial", 14, FontStyle.Bold))
+                        using (Font fontB = new Font("Arial", 14, FontStyle.Bold))
                         {
                             StringFormat sf = new StringFormat();
                             sf.Alignment = StringAlignment.Center;
                             sf.LineAlignment = StringAlignment.Center;
-                            g.DrawString("T", font, Brushes.White, new RectangleF(0, 0, 200, 200), sf);
+
+                            // Left bubble text (can be "A" or source language text)
+                            g.DrawString("A", fontA, Brushes.White, new RectangleF(40, 57, 70, 50), sf);
+
+                            // Right bubble text (can be "B" or target language text)
+                            g.DrawString("B", fontB, Brushes.White, new RectangleF(90, 77, 70, 50), sf);
+                        }
+
+                        // Draw arrows between the bubbles to indicate translation
+                        using (var arrowPen = new Pen(Color.White, 2.5f))
+                        {
+                            // Set the arrow cap
+                            arrowPen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+
+                            // Draw arrow from left to right
+                            g.DrawLine(arrowPen, 75, 80, 100, 95);
+
+                            // Reverse the arrow direction
+                            arrowPen.StartCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+                            arrowPen.EndCap = System.Drawing.Drawing2D.LineCap.NoAnchor;
+
+                            // Draw arrow from right to left
+                            g.DrawLine(arrowPen, 100, 105, 75, 90);
                         }
                     }
 
@@ -236,8 +285,6 @@ namespace YoavDiscordServer
             string helpMessage = "**Translation Bot Commands:**\n" +
                                  $"{CommandPrefix}translate [source language] [target language] [text] - Translates text between languages\n" +
                                  $"{CommandPrefix}translate [target language] [text] - Translates text to target language (auto-detects source)\n" +
-                                 $"{CommandPrefix}autotranslate [text] - Translates text to your preferred language\n" +
-                                 $"{CommandPrefix}setlang [language] - Sets your preferred language for translations\n" +
                                  $"{CommandPrefix}detect [text] - Detects the language of the provided text\n" +
                                  $"{CommandPrefix}languages - Shows a list of supported languages\n" +
                                  $"{CommandPrefix}help - Shows this help message\n" +

@@ -84,6 +84,7 @@ namespace YoavDiscordServer
             clientServerProtocol.MediaPort = mediaRoom.UsersInThisRoom[userId];
             clientServerProtocol.UserId = userId;
             clientServerProtocol.Username = username;
+            Console.WriteLine("Message sent to clients: " + clientServerProtocol.ToString());
             foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if(user != userId)
@@ -102,6 +103,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Get_All_Ips_Of_Connected_Users_In_Some_Media_Room_Command;
             clientServerProtocol.UsersMediaConnectionDetails = GetConnectedUsersDetails(userId, mediaRoom);
             DiscordClientConnection newUser = DiscordClientConnection.GetDiscordClientConnectionById(userId);
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             newUser.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
         }
 
@@ -127,6 +129,7 @@ namespace YoavDiscordServer
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Some_User_Left_The_Media_Room_Command;
             clientServerProtocol.UserIp = DiscordClientConnection.GetUserIpById(userId);
+            Console.WriteLine("Message sent to clients: " + clientServerProtocol.ToString());
             foreach (int user in mediaRoom.UsersInThisRoom.Keys)
             {
                 if (user != userId)

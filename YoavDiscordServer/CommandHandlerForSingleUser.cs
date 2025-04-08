@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ZstdSharp.Unsafe;
 
@@ -74,6 +75,7 @@ namespace YoavDiscordServer
         public void HandleCommand(string messageFromClient)
         {
             ClientServerProtocol clientServerProtocol = ClientServerProtocolParser.Parse(messageFromClient);
+            Console.WriteLine("Received from client: " + clientServerProtocol.ToString());
             switch (clientServerProtocol.TypeOfCommand)
             {
                 case TypeOfCommand.Login_Command:
@@ -161,6 +163,18 @@ namespace YoavDiscordServer
         {
             string hashPassword = CommandHandlerForSingleUser.CreateSha256(password);
             this._userId = this._sqlConnect.GetUserId(username, hashPassword);
+            bool isAlreadyConnected = DiscordClientConnection.CheckIfUserAlreadyConnected(this._userId);
+            if (isAlreadyConnected)
+            {
+                ClientServerProtocol clientServerProtocol1 = new ClientServerProtocol();
+                clientServerProtocol1.TypeOfCommand = TypeOfCommand.Error_Command;
+                clientServerProtocol1.ErrorMessage = "This user is already connected";
+                this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol1));
+                //Thread.Sleep(2000);
+                //this._connection.Disconnect();
+                return;
+
+            }
             this.Role = this._sqlConnect.GetUserRole(this._userId);
             if (this._userId <= 0)
             {
@@ -178,6 +192,7 @@ namespace YoavDiscordServer
                     protocol.TypeOfCommand = TypeOfCommand.Error_Command;
                     protocol.ErrorMessage = "Wrong username or password";
                 }
+                Console.WriteLine("Message sent to client: " + protocol.ToString());
                 this._connection.SendMessage(ClientServerProtocolParser.Generate(protocol));
                 return;
             }
@@ -189,6 +204,7 @@ namespace YoavDiscordServer
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Code_Sent_To_Email_Command;
             clientServerProtocol.Code = codeToEmail;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
             this._logger = UserLogger.GetLoggerForUser(username);
             this._logger.Info("Successfully logged in");
@@ -222,6 +238,7 @@ namespace YoavDiscordServer
                 return;
             }
             protocol.TypeOfCommand = TypeOfCommand.Success_Username_Not_In_The_System_Command;
+            Console.WriteLine("Message sent to client: " + protocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(protocol));
         }
 
@@ -244,6 +261,7 @@ namespace YoavDiscordServer
                 ClientServerProtocol protocol = new ClientServerProtocol();
                 protocol.TypeOfCommand = TypeOfCommand.Error_Command;
                 protocol.ErrorMessage = "Username already exists";
+                Console.WriteLine("Message sent to client: " + protocol.ToString());
                 this._connection.SendMessage(ClientServerProtocolParser.Generate(protocol));
                 return;
             }
@@ -258,6 +276,7 @@ namespace YoavDiscordServer
             clientServerProtocol.Username = username;
             clientServerProtocol.UserId = this._userId;
             clientServerProtocol.Role = this.Role;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
             this.UpdateOthersAboutAllUsersStatus();
             BotManager.GetInstance().NotifyUserRegistered(this._userId, username);
@@ -321,6 +340,7 @@ namespace YoavDiscordServer
                 this._logger.Info("Forgot password email sent");
                 clientServerProtocol.TypeOfCommand = TypeOfCommand.Success_Forgot_Password_Command;
             }
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
             
            
@@ -383,6 +403,7 @@ namespace YoavDiscordServer
                 this.IsAuthenticated = true;
                 this.UpdateOthersAboutAllUsersStatus();
             }
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
             
         }
@@ -396,6 +417,7 @@ namespace YoavDiscordServer
             clientServerProtocol.Username = this.Username;
             clientServerProtocol.UserId = this._userId;
             clientServerProtocol.Role = this.Role;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
             this.IsAuthenticated = true;
             this.UpdateOthersAboutAllUsersStatus();
@@ -414,6 +436,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Return_Image_Of_User_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.ProfilePicture = someUserProfilePicture;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
         }
 
@@ -469,6 +492,7 @@ namespace YoavDiscordServer
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Get_All_Users_Details_Command;
             clientServerProtocol.AllUsersDetails = details;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
         }  
 
@@ -509,6 +533,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Muted_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsMuted = isMuted;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             DiscordClientConnection.Broadcast(ClientServerProtocolParser.Generate(clientServerProtocol));
 
             if (isMuted && userId != this._userId)
@@ -526,6 +551,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Deafened_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsDeafened = isDeafened;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             DiscordClientConnection.Broadcast(ClientServerProtocolParser.Generate(clientServerProtocol));
 
             // Log this action if it's not self-deafening
@@ -554,6 +580,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Disconnected_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.MediaRoomId = mediaRoomId;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             DiscordClientConnection.Broadcast(ClientServerProtocolParser.Generate(clientServerProtocol));
             // Update the room's state - remove the user
             RoomsManager.UpdateEveryoneTheSomeUserLeft(userId, mediaRoom);
@@ -577,6 +604,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Video_Muted_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.IsVideoMuted = isVideoMuted;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             DiscordClientConnection.Broadcast(ClientServerProtocolParser.Generate(clientServerProtocol));
 
             // Log this action if it's not self-muting
@@ -608,6 +636,7 @@ namespace YoavDiscordServer
                 ClientServerProtocol errorProtocol = new ClientServerProtocol();
                 errorProtocol.TypeOfCommand = TypeOfCommand.Error_Command;
                 errorProtocol.ErrorMessage = "You don't have permission to update this user's role.";
+                Console.WriteLine("Message sent to client: " + errorProtocol.ToString());
                 this._connection.SendMessage(ClientServerProtocolParser.Generate(errorProtocol));
                 return;
             }
@@ -619,6 +648,7 @@ namespace YoavDiscordServer
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Role_Has_Been_Updated_Command;
             clientServerProtocol.UserId = userId;
             clientServerProtocol.Role = newRole;
+            Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             DiscordClientConnection.Broadcast(ClientServerProtocolParser.Generate(clientServerProtocol));
             this.UpdateOthersAboutAllUsersStatus();
         }

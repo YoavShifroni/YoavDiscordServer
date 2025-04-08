@@ -76,7 +76,6 @@ namespace YoavDiscordServer
         /// <param name="message"></param>
         public void SendMessage(string message)
         {
-            Console.WriteLine(message);
             try
             {
                 // send message to the server
@@ -214,5 +213,7 @@ namespace YoavDiscordServer
         {
             this._client.Close();
         }
+
+        
     }
 }

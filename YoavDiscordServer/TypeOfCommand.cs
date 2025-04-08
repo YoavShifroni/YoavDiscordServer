@@ -49,9 +49,6 @@ namespace YoavDiscordServer
         User_Video_Muted_Command,
         Update_User_Role_Command,
         User_Role_Has_Been_Updated_Command,
-
-
-
-
+        User_Already_Connected_Command,
     }
 }

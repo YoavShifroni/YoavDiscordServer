@@ -70,7 +70,6 @@ namespace YoavDiscordServer
             if (string.IsNullOrEmpty(cipherText))
                 throw new ArgumentNullException(nameof(cipherText));
 
-            Console.WriteLine("aes decrypt: " + cipherText);
             byte[] buffer = Convert.FromBase64String(cipherText);
 
             using (Aes aes = Aes.Create())
