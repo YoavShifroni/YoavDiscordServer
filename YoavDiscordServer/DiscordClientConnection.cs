@@ -40,6 +40,8 @@ namespace YoavDiscordServer
 
         private TcpConnectionHandler _tcpConnectionHandler;
 
+        private AesFunctions _aesFunctions;
+
         
 
         /// <summary>
@@ -56,11 +58,11 @@ namespace YoavDiscordServer
             // DOS protection
             foreach (DictionaryEntry user in AllClients)
             {
-                bool sameIpAddress = IPAddress.Equals((IPEndPoint)client.Client.RemoteEndPoint, user.Key);
+                bool sameIpAddress = IPAddress.Equals((IPEndPoint)client.Client.RemoteEndPoint, user.Key); // check if it's the same IP address
                 if (sameIpAddress)
                 {
                     DateTime time = ((DiscordClientConnection)user.Value)._lastConnect;
-                    if ((DateTime.Now - time).TotalSeconds < 10)
+                    if ((DateTime.Now - time).TotalSeconds < 10) // check the time difference
                     {
                         count++;
                     }
@@ -77,7 +79,9 @@ namespace YoavDiscordServer
             // Add the new client to our clients collection
             AllClients.Add(this._clientIP, this);
 
-            this._tcpConnectionHandler = new TcpConnectionHandler(client, this);
+            this._aesFunctions = new AesFunctions();
+
+            this._tcpConnectionHandler = new TcpConnectionHandler(client, this, this._aesFunctions);
 
 
             this.CommandHandlerForSingleUser = new CommandHandlerForSingleUser(this);
@@ -117,14 +121,14 @@ namespace YoavDiscordServer
             {
                 RsaFunctions.PublicKey = JsonConvert.DeserializeObject<RSAParameters>(commandRecive);
                 Console.WriteLine("Rsa public key recived");
-                var jsonString = JsonConvert.SerializeObject(AesFunctions.AesKeys);
+                var jsonString = JsonConvert.SerializeObject(this._aesFunctions.AesKeys);
                 this.SendMessage(jsonString);
                 Console.WriteLine("Aes key and iv sent");
 
             }
             else
             {
-                commandRecive = AesFunctions.Decrypt(commandRecive);
+                commandRecive = this._aesFunctions.Decrypt(commandRecive);
                 string[] stringSeparators = new string[] { ClientServerProtocolParser.MessageTrailingDelimiter };
                 string[] lines = commandRecive.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 0; i < lines.Length; i++)

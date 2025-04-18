@@ -47,13 +47,16 @@ namespace YoavDiscordServer
 
         private DiscordClientConnection _discordClientConnection;
 
+        private AesFunctions _aesFunctions;
 
-        public TcpConnectionHandler(TcpClient tcpClient, DiscordClientConnection discordClientConnection)
+
+        public TcpConnectionHandler(TcpClient tcpClient, DiscordClientConnection discordClientConnection, AesFunctions aesFunctions)
         {
             this._client = tcpClient;
             this._discordClientConnection = discordClientConnection;
             // Read data from the client asynchronously
             this._data = new byte[this._client.ReceiveBufferSize];
+            this._aesFunctions = aesFunctions;
 
         }
 
@@ -94,11 +97,11 @@ namespace YoavDiscordServer
                 }
                 else
                 {
-                    message = AesFunctions.Encrypt(message);
+                    message = this._aesFunctions.Encrypt(message);
                 }
 
                 byte[] data = System.Text.Encoding.UTF8.GetBytes(message);
-                byte[] length = BitConverter.GetBytes(data.Length);
+                byte[] length = BitConverter.GetBytes(data.Length); // the data length
                 byte[] bytes = new byte[data.Length + 4];
                 // combine byte array, I took this code from the website StackOverFlow in this link:
                 // https://stackoverflow.com/questions/415291/best-way-to-combine-two-or-more-byte-arrays-in-c-sharp
@@ -147,6 +150,11 @@ namespace YoavDiscordServer
             }
         }
 
+        /// <summary>
+        /// Handles incoming data from the network stream, reconstructing messages based on a 4-byte length-prefixed protocol.
+        /// Supports processing of complete messages and recursively handles additional messages if multiple are received in a single read.
+        /// </summary>
+        /// <param name="bytesRead">The number of bytes read from the network stream during the current receive operation.</param>
         private void HandleReceivedMessage(int bytesRead)
         {
             // If message length is not set, read the first 4 bytes for message length
@@ -209,10 +217,7 @@ namespace YoavDiscordServer
             }
         }
 
-        public void Close()
-        {
-            this._client.Close();
-        }
+        
 
         
     }

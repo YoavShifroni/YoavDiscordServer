@@ -9,17 +9,17 @@ namespace YoavDiscordServer
     /// <summary>
     /// Provides AES encryption and decryption functionality using a shared key and Iv.
     /// </summary>
-    public static class AesFunctions
+    public class AesFunctions
     {
         /// <summary>
         /// Contains the AES key and Iv, used for encryption and decryption.
         /// </summary>
-        public static AesKeys AesKeys;
+        public AesKeys AesKeys;
 
         /// <summary>
         /// Static constructor that generates a new AES key and IV and assigns them to the <see cref="AesKeys"/> property.
         /// </summary>
-        static AesFunctions()
+        public AesFunctions()
         {
             using (Aes aes = Aes.Create())
             {
@@ -36,7 +36,7 @@ namespace YoavDiscordServer
         /// </summary>
         /// <param name="plainText">The plain text string to encrypt.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="plainText"/> is null or empty.</exception>
-        public static string Encrypt(string plainText)
+        public string Encrypt(string plainText)
         {
             if (string.IsNullOrEmpty(plainText))
                 throw new ArgumentNullException(nameof(plainText));
@@ -65,7 +65,7 @@ namespace YoavDiscordServer
         /// </summary>
         /// <param name="cipherText">The Base64-encoded string to decrypt.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cipherText"/> is null or empty.</exception>
-        public static string Decrypt(string cipherText)
+        public string Decrypt(string cipherText)
         {
             if (string.IsNullOrEmpty(cipherText))
                 throw new ArgumentNullException(nameof(cipherText));

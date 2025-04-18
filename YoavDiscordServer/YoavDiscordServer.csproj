@@ -164,7 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AesFunctions.cs" />
-    <Compile Include="AesKeys.cs" />
+    <Compile Include="Data Objects\AesKeys.cs" />
     <Compile Include="ApiConfig.cs" />
     <Compile Include="Bot.cs" />
     <Compile Include="BotManager.cs" />

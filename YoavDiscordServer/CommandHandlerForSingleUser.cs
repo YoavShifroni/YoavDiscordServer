@@ -440,6 +440,10 @@ namespace YoavDiscordServer
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
         }
 
+        /// <summary>
+        /// call the GetMessageHistoryOfChatRoom function in the RoomManager class
+        /// </summary>
+        /// <param name="chatRoomId"></param>
         private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId) 
         {
             RoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);

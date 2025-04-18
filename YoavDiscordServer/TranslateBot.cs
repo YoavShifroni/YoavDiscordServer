@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -392,7 +393,9 @@ namespace YoavDiscordServer
                 string jsonResponse = await response.Content.ReadAsStringAsync();
                 dynamic data = JObject.Parse(jsonResponse);
 
-                return data.data.translations[0].translatedText;
+                string translatedText = data.data.translations[0].translatedText;
+
+                return WebUtility.HtmlDecode(translatedText);
             }
             catch (Exception ex)
             {
@@ -427,7 +430,15 @@ namespace YoavDiscordServer
                 string jsonResponse = await response.Content.ReadAsStringAsync();
                 dynamic data = JObject.Parse(jsonResponse);
 
-                return data.data.detections[0][0].language;
+                string detectedCode = data.data.detections[0][0].language;
+
+                // Normalize deprecated codes
+                if (detectedCode == "iw") detectedCode = "he";
+                else if (detectedCode == "in") detectedCode = "id";
+                else if (detectedCode == "ji") detectedCode = "yi";
+                else if (detectedCode == "zh-CN") detectedCode = "zh";
+
+                return detectedCode;
             }
             catch (Exception ex)
             {

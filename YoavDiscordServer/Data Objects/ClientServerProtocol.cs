@@ -4,103 +4,150 @@ using YoavDiscordServer;
 
 namespace YoavDiscordServer
 {
+    /// <summary>
+    /// Represents a protocol message used to communicate between client and server,
+    /// containing user data, commands, and chat/media interaction details.
+    /// </summary>
     public class ClientServerProtocol
     {
         /// <summary>
-        /// The command
+        /// Gets or sets the command type to be processed by the server or client.
         /// </summary>
         public TypeOfCommand TypeOfCommand { get; set; }
 
         /// <summary>
-        /// The username of this user
+        /// Gets or sets the username of the user.
         /// </summary>
         public string Username { get; set; }
 
         /// <summary>
-        /// The password of this user
+        /// Gets or sets the password of the user.
         /// </summary>
         public string Password { get; set; }
 
         /// <summary>
-        /// The first name of this user
+        /// Gets or sets the first name of the user.
         /// </summary>
         public string FirstName { get; set; }
 
         /// <summary>
-        /// The last name of this user
+        /// Gets or sets the last name of the user.
         /// </summary>
         public string LastName { get; set; }
 
         /// <summary>
-        /// The email of this user
+        /// Gets or sets the email address of the user.
         /// </summary>
         public string Email { get; set; }
 
         /// <summary>
-        /// The city of this user
+        /// Gets or sets the city the user is from.
         /// </summary>
         public string City { get; set; }
 
         /// <summary>
-        /// The gender of this user
+        /// Gets or sets the gender of the user.
         /// </summary>
         public string Gender { get; set; }
 
         /// <summary>
-        /// The message that will be showed to the user
+        /// Gets or sets the error message to be shown to the user.
         /// </summary>
         public string ErrorMessage { get; set; }
 
         /// <summary>
-        /// The code that sent to the user mail
+        /// Gets or sets the verification code sent to the user's email.
         /// </summary>
         public string Code { get; set; }
 
         /// <summary>
-        /// The profile picture of this user converts to byte's array
+        /// Gets or sets the user's profile picture as a byte array.
         /// </summary>
         public byte[] ProfilePicture { get; set; }
 
         /// <summary>
-        /// The number of minutes that the user need to wait
+        /// Gets or sets the cooldown time in minutes for the user.
         /// </summary>
         public int TimeToCooldown { get; set; }
 
+        /// <summary>
+        /// Gets or sets the chat message sent by the user.
+        /// </summary>
         public string MessageThatTheUserSent { get; set; }
 
+        /// <summary>
+        /// Gets or sets the timestamp of when the message was sent.
+        /// </summary>
         public DateTime TimeThatTheMessageWasSent { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ID of the chat room the message belongs to.
+        /// </summary>
         public int ChatRoomId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ID of the media room the user is connected to.
+        /// </summary>
         public int MediaRoomId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the ID of the user.
+        /// </summary>
         public int UserId { get; set; }
 
-
+        /// <summary>
+        /// Gets or sets the list of messages in a specific chat room.
+        /// </summary>
         public List<UserMessage> MessagesOfAChatRoom { get; set; }
 
+        /// <summary>
+        /// Gets or sets the IP address of a new participant joining a media channel.
+        /// </summary>
         public string NewParticipantIp { get; set; }
 
+        /// <summary>
+        /// Gets or sets the connection details of users in a media room.
+        /// </summary>
         public List<UserMediaConnectionDetails> UsersMediaConnectionDetails { get; set; }
 
+        /// <summary>
+        /// Gets or sets the media port used for real-time communication.
+        /// </summary>
         public int MediaPort { get; set; }
 
-
+        /// <summary>
+        /// Gets or sets the IP address of the user.
+        /// </summary>
         public string UserIp { get; set; }
 
+        /// <summary>
+        /// Gets or sets the list of all users and their details.
+        /// </summary>
         public List<UserDetails> AllUsersDetails { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether the user is muted.
+        /// </summary>
         public bool IsMuted { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether the user's video is muted.
+        /// </summary>
         public bool IsVideoMuted { get; set; }
 
+        /// <summary>
+        /// Gets or sets whether the user is deafened (can't hear).
+        /// </summary>
         public bool IsDeafened { get; set; }
 
+        /// <summary>
+        /// Gets or sets the user's role (e.g., admin, moderator).
+        /// </summary>
         public int Role { get; set; }
 
 
         /// <summary>
-        /// Empty constructor
+        /// Initializes a new instance of the <see cref="ClientServerProtocol"/> class.
         /// </summary>
         public ClientServerProtocol()
         {
@@ -108,7 +155,9 @@ namespace YoavDiscordServer
         }
 
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientServerProtocol"/> class with all parameters.
+        /// </summary>
         public ClientServerProtocol(TypeOfCommand typeOfCommand, string username, string password, string firstName, string lastName, string email, string city,
             string gender, string errorMessage, string code, byte[] profilePicture, int timeToCooldown, string messageThatTheUserSent,
             DateTime timeThatTheMessageWasSent, int chatRoomId, int mediaRoomId, int userId, List<UserMessage> messagesOfAChatRoom, string newParticipantIp,
