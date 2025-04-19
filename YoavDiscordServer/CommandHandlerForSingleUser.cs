@@ -408,6 +408,21 @@ namespace YoavDiscordServer
             
         }
 
+        /// <summary>
+        /// Processes a request for the user's username and profile picture.
+        /// Retrieves the user's profile data and sends it to the client.
+        /// </summary>
+        /// <remarks>
+        /// This method:
+        /// 1. Creates a Success_Connected_To_The_Application_Command response
+        /// 2. Retrieves the user's profile picture from the database
+        /// 3. Sends the user's profile information, username, ID, and role to the client
+        /// 4. Sets the user's authentication status to true
+        /// 5. Notifies other users about the updated user status list
+        /// 
+        /// This is typically called after successful authentication to initialize
+        /// the client's user information.
+        /// </remarks>
         private void HandleGetUsernameAndProfilePicture()
         {
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
@@ -423,12 +438,36 @@ namespace YoavDiscordServer
             this.UpdateOthersAboutAllUsersStatus();
         }
 
+        /// <summary>
+        /// Handles a message sent by a user in a chat room.
+        /// Forwards the message to the RoomsManager for processing and distribution.
+        /// </summary>
+        /// <param name="messageThatTheUserSent">The content of the message sent by the user.</param>
+        /// <param name="chatRoomId">The ID of the chat room where the message was sent.</param>
+        /// <remarks>
+        /// This method delegates message handling to the RoomsManager, which is responsible
+        /// for distributing the message to all users in the specified chat room.
+        /// </remarks>
         private void HandleSendMessage(string messageThatTheUserSent, int chatRoomId)
         {
-            RoomsManager.HandleMessageSentFromUserInChat(this._userId,this.Username, messageThatTheUserSent,
+            RoomsManager.HandleMessageSentFromUserInChat(this._userId, this.Username, messageThatTheUserSent,
                 chatRoomId);
         }
 
+        /// <summary>
+        /// Processes a request for a user's profile picture.
+        /// Retrieves the requested user's profile picture and sends it to the requesting client.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose profile picture is being requested.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Retrieves the requested profile picture from the database
+        /// 2. Creates a Return_Image_Of_User_Command response
+        /// 3. Sends the profile picture data to the requesting client
+        /// 
+        /// This is typically called when a client needs to display another user's
+        /// profile picture that it doesn't have cached locally.
+        /// </remarks>
         private void HandleFetchImageOfUser(int userId)
         {
             byte[] someUserProfilePicture = this._sqlConnect.GetProfilePictureByUserId(userId);
@@ -441,19 +480,43 @@ namespace YoavDiscordServer
         }
 
         /// <summary>
-        /// call the GetMessageHistoryOfChatRoom function in the RoomManager class
+        /// Handles a request for the message history of a specific chat room.
+        /// Retrieves and sends the chat history to the requesting client.
         /// </summary>
-        /// <param name="chatRoomId"></param>
-        private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId) 
+        /// <param name="chatRoomId">The ID of the chat room whose history is requested.</param>
+        /// <remarks>
+        /// This method delegates to the RoomsManager to retrieve and send the message history
+        /// for the specified chat room to the requesting user.
+        /// 
+        /// This is typically called when a user joins or switches to a chat room,
+        /// allowing them to see previous messages.
+        /// </remarks>
+        private void HandleGetMessagesHistoryOfChatRoom(int chatRoomId)
         {
             RoomsManager.GetMessagesHistoryOfChatRoom(this._userId, chatRoomId);
         }
 
+        /// <summary>
+        /// Handles a user's request to connect to a media (voice/video) room.
+        /// Updates room membership and notifies all users about the new participant.
+        /// </summary>
+        /// <param name="mediaRoomId">The ID of the media room to connect to.</param>
+        /// <param name="mediaPort">The port on which the user is listening for media connections.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Adds the user to the specified media room with their media port
+        /// 2. Notifies other users in the room about the new participant
+        /// 3. Notifies the joining user about existing participants in the room
+        /// 4. Broadcasts a User_Join_Media_Channel_Command to all users except the joining user
+        /// 
+        /// The mediaPort parameter is critical for establishing peer-to-peer connections
+        /// between users in the media room.
+        /// </remarks>
         private void HandleConnectToMediaRoom(int mediaRoomId, int mediaPort)
         {
             MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
             mediaRoom.AddUser(this._userId, mediaPort);
-            RoomsManager.UpdateOthersWhenNewParticipantJoinTheMediaRoom(this._userId,this.Username ,mediaRoom);
+            RoomsManager.UpdateOthersWhenNewParticipantJoinTheMediaRoom(this._userId, this.Username, mediaRoom);
             RoomsManager.UpdateNewUserAboutTheCurrentUsersInTheMediaRoom(this._userId, mediaRoom);
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.User_Join_Media_Channel_Command;
@@ -468,6 +531,19 @@ namespace YoavDiscordServer
             DiscordClientConnection.SendMessageToAllUserExceptOne(this._userId, clientServerProtocol);
         }
 
+        /// <summary>
+        /// Handles a user's request to disconnect from a media room.
+        /// Updates room membership and notifies all users about the departure.
+        /// </summary>
+        /// <param name="mediaRoomId">The ID of the media room to disconnect from.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Validates that the specified media room exists
+        /// 2. Notifies other users in the room about the user's departure
+        /// 3. Broadcasts a User_Leave_Media_Channel_Command to all users except the leaving user
+        /// 
+        /// If the specified media room doesn't exist, the method returns without taking action.
+        /// </remarks>
         private void HandleDisconnectFromMediaRoom(int mediaRoomId)
         {
             MediaRoom mediaRoom = RoomsManager.GetMediaRoomById(mediaRoomId);
@@ -484,12 +560,37 @@ namespace YoavDiscordServer
 
         }
 
+        /// <summary>
+        /// Removes the user from all media rooms and updates other users about the change.
+        /// Typically called when a user disconnects from the server.
+        /// </summary>
+        /// <remarks>
+        /// This method:
+        /// 1. Finds which media room (if any) the user is currently in
+        /// 2. Calls HandleDisconnectFromMediaRoom to handle the media room departure
+        /// 3. Updates all other connected users about the updated user status list
+        /// 
+        /// This ensures clean disconnection from all active media sessions when
+        /// a user leaves the application.
+        /// </remarks>
         public void RemoveUserFromAllMediaRooms()
         {
             this.HandleDisconnectFromMediaRoom(RoomsManager.GetMediaRoomIdForUser(this._userId));
             this.UpdateOthersAboutAllUsersStatus();
         }
 
+        /// <summary>
+        /// Handles a request for information about all users.
+        /// Retrieves and sends a list of all users with their current status to the requesting client.
+        /// </summary>
+        /// <remarks>
+        /// This method:
+        /// 1. Gets accurate user details including online status and media room membership
+        /// 2. Creates a Get_All_Users_Details_Command response
+        /// 3. Sends the complete user list to the requesting client
+        /// 
+        /// This is typically called when a client initializes or refreshes its user list.
+        /// </remarks>
         private void HandleFetchAllUsers()
         {
             List<UserDetails> details = this.GetAccurateAllUsersDetails();
@@ -498,8 +599,21 @@ namespace YoavDiscordServer
             clientServerProtocol.AllUsersDetails = details;
             Console.WriteLine("Message sent to client: " + clientServerProtocol.ToString());
             this._connection.SendMessage(ClientServerProtocolParser.Generate(clientServerProtocol));
-        }  
+        }
 
+        /// <summary>
+        /// Notifies all other connected users about changes in the user list.
+        /// Sends an updated list of all users with their current status to all clients except the current user.
+        /// </summary>
+        /// <remarks>
+        /// This method:
+        /// 1. Gets accurate user details including online status and media room membership
+        /// 2. Creates a Get_All_Users_Details_Command message
+        /// 3. Broadcasts the message to all connected users except the current user
+        /// 
+        /// This is called whenever a user's status changes (connecting, disconnecting,
+        /// joining or leaving media rooms) to keep all clients' user lists synchronized.
+        /// </remarks>
         private void UpdateOthersAboutAllUsersStatus()
         {
             List<UserDetails> details = this.GetAccurateAllUsersDetails();
@@ -509,7 +623,20 @@ namespace YoavDiscordServer
             DiscordClientConnection.SendMessageToAllUserExceptOne(this._userId, clientServerProtocol);
         }
 
-
+        /// <summary>
+        /// Gets a list of all users with accurate status information.
+        /// Enriches basic user data with online status and current media room membership.
+        /// </summary>
+        /// <returns>A list of UserDetails objects with up-to-date status information.</returns>
+        /// <remarks>
+        /// This method:
+        /// 1. Retrieves basic user information from the database
+        /// 2. Updates each user's MediaChannelId based on current media room membership
+        /// 3. Sets each user's Status flag based on whether they're currently connected
+        /// 
+        /// This provides a complete and accurate view of all users in the system
+        /// including those who are currently offline.
+        /// </remarks>
         private List<UserDetails> GetAccurateAllUsersDetails()
         {
             List<UserDetails> details = this._sqlConnect.GetAllUsersDetails();
@@ -529,6 +656,21 @@ namespace YoavDiscordServer
             return details;
         }
 
+        /// <summary>
+        /// Handles a request to change a user's audio mute status.
+        /// Updates the user's mute state and notifies all clients about the change.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose mute status is being changed.</param>
+        /// <param name="isMuted">True to mute the user, false to unmute.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Updates the user's mute status in the RoomsManager
+        /// 2. Creates a User_Muted_Command message
+        /// 3. Broadcasts the status change to all connected clients
+        /// 4. Logs the action if one user is muting another (not self-muting)
+        /// 
+        /// This supports both self-muting and moderator-initiated muting of other users.
+        /// </remarks>
         private void HandleSetMuteUser(int userId, bool isMuted)
         {
 
@@ -547,7 +689,22 @@ namespace YoavDiscordServer
             }
         }
 
-        
+        /// <summary>
+        /// Handles a request to change a user's deafen status.
+        /// Updates the user's deafen state and notifies all clients about the change.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose deafen status is being changed.</param>
+        /// <param name="isDeafened">True to deafen the user, false to undeafen.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Updates the user's deafen status in the RoomsManager
+        /// 2. Creates a User_Deafened_Command message
+        /// 3. Broadcasts the status change to all connected clients
+        /// 4. Logs the action if one user is deafening another (not self-deafening)
+        /// 
+        /// Deafening prevents a user from hearing any audio in media rooms.
+        /// This supports both self-deafening and moderator-initiated deafening of other users.
+        /// </remarks>
         private void HandleSetDeafenUser(int userId, bool isDeafened)
         {
             RoomsManager.SetUserDeafened(userId, isDeafened);
@@ -566,6 +723,23 @@ namespace YoavDiscordServer
             }
         }
 
+        /// <summary>
+        /// Handles a request to forcibly disconnect a user from a media room.
+        /// Typically used by moderators to remove users from voice/video channels.
+        /// </summary>
+        /// <param name="userId">The ID of the user to disconnect.</param>
+        /// <param name="mediaRoomId">The ID of the media room from which to disconnect the user.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Validates that the specified media room exists
+        /// 2. Confirms that the target user is actually in that media room
+        /// 3. Broadcasts a User_Disconnected_Command to all clients
+        /// 4. Updates the room state by removing the user
+        /// 5. Logs the action if one user is disconnecting another
+        /// 
+        /// If the room doesn't exist or the user isn't in the specified room,
+        /// the method returns without taking action.
+        /// </remarks>
         private void HandleDisconnectUserFromMediaRoom(int userId, int mediaRoomId)
         {
             // Check if the user is in the specified media room
@@ -597,9 +771,22 @@ namespace YoavDiscordServer
             }
         }
 
-
-
-
+        /// <summary>
+        /// Handles a request to change a user's video mute status.
+        /// Updates the user's video mute state and notifies all clients about the change.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose video mute status is being changed.</param>
+        /// <param name="isVideoMuted">True to mute the user's video, false to unmute.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Updates the user's video mute status in the RoomsManager
+        /// 2. Creates a User_Video_Muted_Command message
+        /// 3. Broadcasts the status change to all connected clients
+        /// 4. Logs the action if one user is video-muting another (not self-muting)
+        /// 
+        /// Video muting prevents a user's camera feed from being transmitted to other participants.
+        /// This supports both self-video-muting and moderator-initiated video muting of other users.
+        /// </remarks>
         private void HandleSetVideoMuteUser(int userId, bool isVideoMuted)
         {
             RoomsManager.SetUserVideoMuted(userId, isVideoMuted);
@@ -619,8 +806,27 @@ namespace YoavDiscordServer
             }
         }
 
-
-
+        /// <summary>
+        /// Handles a request to update a user's role.
+        /// Validates permissions, updates the role in the database, and notifies all clients.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose role is being updated.</param>
+        /// <param name="newRole">The new role ID to assign to the user.</param>
+        /// <remarks>
+        /// This method:
+        /// 1. Checks the current user's permission to change roles based on their own role
+        /// 2. If permitted, updates the user's role in the database
+        /// 3. Updates the role in the server-side user data
+        /// 4. Broadcasts a User_Role_Has_Been_Updated_Command to all clients
+        /// 5. Updates all clients with the refreshed user list
+        /// 
+        /// The permission rules are:
+        /// - Admins (role 0) can change users between Moderator (1) and Member (2) roles
+        /// - Moderators (role 1) can only promote Members (2) to Moderators (1)
+        /// - Members (role 2) cannot change roles
+        /// 
+        /// If the user doesn't have permission, an error message is sent back to the requesting client.
+        /// </remarks>
         private void HandleUpdateUserRole(int userId, int newRole)
         {
             int userCurrentRole = this._sqlConnect.GetUserRole(userId);

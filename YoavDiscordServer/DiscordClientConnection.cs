@@ -139,7 +139,9 @@ namespace YoavDiscordServer
         }
 
        
-
+        /// <summary>
+        /// Cleanup this connection
+        /// </summary>
         public void CleanUpConnection()
         {
             try
@@ -155,6 +157,11 @@ namespace YoavDiscordServer
 
         }
 
+        /// <summary>
+        /// Send message to all users except one
+        /// </summary>
+        /// <param name="userIdToExclude"></param>
+        /// <param name="protocol"></param>
         public static void SendMessageToAllUserExceptOne(int userIdToExclude, ClientServerProtocol protocol)
         {
             Console.WriteLine("Message sent to clients: " + protocol.ToString());
@@ -167,6 +174,11 @@ namespace YoavDiscordServer
             }
         }
 
+        /// <summary>
+        /// Send message to specific user
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="protocol"></param>
         public static void SendMessageToSpecificUser(int userId, ClientServerProtocol protocol)
         {
             foreach (DiscordClientConnection user in AllClients.Values)
@@ -180,6 +192,11 @@ namespace YoavDiscordServer
             }
         }
 
+        /// <summary>
+        /// Get user by his id
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public static string GetUserIpById(int userId)
         {
             foreach(DiscordClientConnection user in AllClients.Values)
@@ -192,6 +209,11 @@ namespace YoavDiscordServer
             return null;
         }
 
+        /// <summary>
+        /// Get the object DiscordClientConnection by the user id
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public static DiscordClientConnection GetDiscordClientConnectionById(int userId)
         {
             foreach (DiscordClientConnection user in AllClients.Values)
@@ -204,6 +226,10 @@ namespace YoavDiscordServer
             return null;
         }
 
+        /// <summary>
+        /// Get all the ids of connected users
+        /// </summary>
+        /// <returns></returns>
         public static List<int> GetIdsOfAllConnectedUsers()
         {
             List<int> ids = new List<int>();
@@ -214,6 +240,11 @@ namespace YoavDiscordServer
             return ids;
         }
 
+        /// <summary>
+        /// Checkk if this user already connected
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public static bool CheckIfUserAlreadyConnected(int userId)
         {
             int count = 0;

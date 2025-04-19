@@ -11,9 +11,16 @@ namespace YoavDiscordServer
 {
     public static class ApiConfig
     {
-        private const string CONFIG_FILE_PATH = "AppSettings.json"; 
+        /// <summary>
+        /// The config file path - const field
+        /// </summary>
+        private const string CONFIG_FILE_PATH = "AppSettings.json";
 
-        // Method to retrieve the API key from environment variables or JSON settings
+        /// <summary>
+        ///  Retrieve the API key from environment variables or JSON settings
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="ApplicationException"></exception>
         public static string GetGoogleApiKey()
         {
             string apiKey =  ReadApiKeyFromJsonFile();
@@ -27,6 +34,10 @@ namespace YoavDiscordServer
             return apiKey;
         }
 
+        /// <summary>
+        /// Read the API key
+        /// </summary>
+        /// <returns></returns>
         private static string ReadApiKeyFromJsonFile()
         {
             try

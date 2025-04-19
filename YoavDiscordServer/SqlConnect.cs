@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,12 +17,22 @@ namespace YoavDiscordServer
         private SqlConnection connection;
 
         /// <summary>
+        /// The name of the database file (assumed to be located in the same directory as the executable).
+        /// </summary>
+        private const string dbFileName = "Database1.mdf";
+
+        /// <summary>
+        /// The base directory of the currently running application (usually the bin\Debug or bin\Release folder).
+        /// </summary>
+        private string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+        /// <summary>
         /// The constructor - creating the SQL connection with the database
         /// </summary>
         public SqlConnect()
         {
-
-            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=D:\Visual Studio\YoavDiscordServer\YoavDiscordServer\Database1.mdf;Integrated Security=True";
+            string dbFilePath = Path.Combine(baseDirectory, dbFileName);
+            string connectionString = $@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename={dbFilePath};Integrated Security=True";
             connection = new SqlConnection(connectionString);
         }
 

@@ -49,7 +49,12 @@ namespace YoavDiscordServer
 
         private AesFunctions _aesFunctions;
 
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="tcpClient"></param>
+        /// <param name="discordClientConnection"></param>
+        /// <param name="aesFunctions"></param>
         public TcpConnectionHandler(TcpClient tcpClient, DiscordClientConnection discordClientConnection, AesFunctions aesFunctions)
         {
             this._client = tcpClient;
@@ -60,6 +65,9 @@ namespace YoavDiscordServer
 
         }
 
+        /// <summary>
+        /// Start listen
+        /// </summary>
         public void StartListen()
         {
             // Begin async read from the NetworkStream
