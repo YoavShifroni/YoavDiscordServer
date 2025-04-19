@@ -685,6 +685,7 @@ namespace YoavDiscordServer
             if (isMuted && userId != this._userId)
             {
                 string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger = UserLogger.GetLoggerForUser(this.Username);
                 this._logger.Info($"User {this.Username} muted user {targetUsername}");
             }
         }
@@ -719,6 +720,7 @@ namespace YoavDiscordServer
             if (isDeafened && userId != this._userId)
             {
                 string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger = UserLogger.GetLoggerForUser(this.Username);
                 this._logger.Info($"User {this.Username} deafened user {targetUsername}");
             }
         }
@@ -767,6 +769,7 @@ namespace YoavDiscordServer
             if (userId != this._userId)
             {
                 string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger = UserLogger.GetLoggerForUser(this.Username);
                 this._logger.Info($"User {this.Username} disconnected user {targetUsername} from media room {mediaRoomId}");
             }
         }
@@ -802,6 +805,7 @@ namespace YoavDiscordServer
             if (isVideoMuted && userId != this._userId)
             {
                 string targetUsername = this._sqlConnect.GetUsernameById(userId);
+                this._logger = UserLogger.GetLoggerForUser(this.Username);
                 this._logger.Info($"User {this.Username} video muted user {targetUsername}");
             }
         }
