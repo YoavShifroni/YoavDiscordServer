@@ -301,14 +301,7 @@ namespace YoavDiscordServer
         {
             // Check if this is a command for this bot
             if (await base.ProcessMessage(userId, username, message, chatRoomId))
-                return true;
-
-            // Check if the message is asking about translation
-            if (message.ToLower().Contains("translate") || message.ToLower().Contains("translation") ||
-                message.ToLower().Contains("language") || message.ToLower().Contains("interpret"))
             {
-                SendMessage(chatRoomId,userId, username, message,  $"Hi {username}! I can help with translations. Use `{CommandPrefix}help` " +
-                    $"to see available commands or try `{CommandPrefix}translate [target language] [text]` to translate text.");
                 return true;
             }
 

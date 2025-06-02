@@ -41,8 +41,8 @@ namespace YoavDiscordServer
                 // AcceptTcpClient - Blocking call
                 // Execute will not continue until a connection is established
 
-                // We create an instance of ChatClient so the server will be able to 
-                // server multiple client at the same time.
+                // We create an instance of DiscordClientConnection so the server will be able to 
+                // serve multiple clients at the same time.
                 try
                 {
                     DiscordClientConnection user = new DiscordClientConnection(listener.AcceptTcpClient());

@@ -70,6 +70,7 @@ namespace YoavDiscordServer
             }
             if (count >= 10)
             {
+                client.Close();
                 throw new Exception("Someone is trying to connect too fast (DOS)");
             }
 

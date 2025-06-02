@@ -245,7 +245,7 @@ namespace YoavDiscordServer
             {
                 while (reader.Read())
                 {
-                    details.Add(new UserDetails((int)reader["Id"], (string)reader["Username"], (byte[])reader["ProfilePicture"], (int)reader["Role"]));
+                    details.    Add(new UserDetails((int)reader["Id"], (string)reader["Username"], (byte[])reader["ProfilePicture"], (int)reader["Role"]));
                 }
             }
             finally

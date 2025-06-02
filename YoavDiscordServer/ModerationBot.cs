@@ -112,7 +112,7 @@ namespace YoavDiscordServer
             // Rules command
             CommandHandlers["rules"] = async (userId, username, originalMessage, args, chatRoomId) =>
             {
-                SendServerRules(args.Length > 0 && int.TryParse(args[0], out int channelId) ? channelId : chatRoomId, userId, username, originalMessage);
+                SendServerRules(chatRoomId, userId, username, originalMessage);
             };
 
             // Add banned word command

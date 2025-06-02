@@ -83,10 +83,12 @@ namespace YoavDiscordServer
                 userId = userId,
                 Username = username,
                 Message = message,
-                Time = DateTime.UtcNow,  // Use current UTC time
+                //Time = DateTime.UtcNow,  // Use current UTC time
                 ChatRoomId = chatRoomId
             };
-            MongoDBClient.GetInstance().InsertMessage(userMessage);
+            //MongoDBClient.GetInstance().InsertMessage(userMessage);
+            MongoDBRestClient mongoDBRestClient = new MongoDBRestClient();
+            mongoDBRestClient.InsertMessage(userMessage);
             DiscordClientConnection.SendMessageToAllUserExceptOne(userId, clientServerProtocol);
         }
 
@@ -97,7 +99,18 @@ namespace YoavDiscordServer
         /// <param name="chatRoomId">The ID of the chat room to retrieve messages from</param>
         public static async void GetMessagesHistoryOfChatRoom(int userId, int chatRoomId)
         {
-            List<UserMessage> messages = await MongoDBClient.GetInstance().GetAllMessageOfChatRoom(chatRoomId);
+            //List<UserMessage> messages = await MongoDBClient.GetInstance().GetAllMessageOfChatRoom(chatRoomId);
+            MongoDBRestClient mongoDBRestClient = new MongoDBRestClient();
+            List<UserMessage> messages = null;
+            try
+            {
+                messages = await mongoDBRestClient.GetAllMessageOfChatRoom(chatRoomId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return;
+            }
             ClientServerProtocol clientServerProtocol = new ClientServerProtocol();
             clientServerProtocol.TypeOfCommand = TypeOfCommand.Return_Messages_History_Of_Chat_Room_Command;
             clientServerProtocol.MessagesOfAChatRoom = messages;

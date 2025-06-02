@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -14,6 +15,8 @@ namespace YoavDiscordServer
     /// <summary>
     /// Provides a singleton client for MongoDB database operations.
     /// Handles connections to the MongoDB server and manages message data for the Discord server clone.
+    /// 
+    /// NOTE: This class is not used anymore because the firewall in my classroom probably blocks the connection to this port (27017)
     /// </summary>
     public class MongoDBClient
     {
@@ -92,9 +95,20 @@ namespace YoavDiscordServer
         /// <returns>A task that resolves to a list of UserMessage objects for the specified chat room</returns>
         public async Task<List<UserMessage>> GetAllMessageOfChatRoom(int chatRoomId)
         {
+            // example:
+            //MongoDB Server
+            //└── Database: admin
+            //    └── Collection: UserMessages
+            //        ├── Document 1
+            //        │   ├── _id: ObjectId("...1")
+            //        │   ├── userId: 101
+            //        │   ├── username: "alice"
+            //        │   ├── message: "Hello, world!"
+            //        │   ├── time: 2025 - 04 - 18T10: 00:00Z
+            //        │   └── chatRoomId: 1
             var collection = database.GetCollection<UserMessage>(COLLECTION_NAME);
             var filter = Builders<UserMessage>.Filter.Eq(e => e.ChatRoomId, chatRoomId);
-            var sort = Builders<UserMessage>.Sort.Ascending(e => e.Time);
+            var sort = Builders<UserMessage>.Sort.Ascending(e => e.Time); // the first message will be the oldest message
             return await collection.Find(filter).Sort(sort).ToListAsync();
         }
     }

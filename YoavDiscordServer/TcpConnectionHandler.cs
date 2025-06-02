@@ -35,7 +35,7 @@ namespace YoavDiscordServer
         private byte[] _data;
 
         /// <summary>
-        /// Memory stream used for assembling incoming message data.
+        /// Memory stream used for building incoming message data.
         /// </summary>
         private MemoryStream memoryStream = new MemoryStream();
 
@@ -70,13 +70,21 @@ namespace YoavDiscordServer
         /// </summary>
         public void StartListen()
         {
-            // Begin async read from the NetworkStream
-            _client.GetStream().BeginRead(this._data,
-                                          0,
-                                          System.Convert.ToInt32(this._client.ReceiveBufferSize),
-                                          ReceiveMessage,
-                                          _client.GetStream());
-    
+            // Begin async read from the NetworkStream and everytime I start to get a TCP message the ReceiveMessage is called using a different thread
+            // The BeginRead function registers to receive messages from the given Socket connection and whenever there is a new message ready,
+            // the OS notifies the C# process about it, and a thread from the thread pool is being used to call the ReceiveMessage function 
+            _client.GetStream().BeginRead(
+                this._data,                   // Buffer to store received data
+                0,                            // Start position in buffer
+                _client.ReceiveBufferSize,    // Maximum bytes to read
+                ReceiveMessage,               // CALLBACK FUNCTION - called when data arrives
+                _client.GetStream()           // The NetworkStream itself - two-way communication channel
+            );
+
+            // example of OS mapping after BeginRead function is registered:
+            //Socket Handle 12345 → Callback: ReceiveMessage, Object: this TcpConnectionHandler
+            //Socket Handle 12346 → Callback: ReceiveMessage, Object: different TcpConnectionHandler
+
         }
 
 
@@ -91,7 +99,7 @@ namespace YoavDiscordServer
             {
                 // send message to the server
 
-                NetworkStream ns;
+                NetworkStream ns; // gives us access to the data that is sent and received in this connection
 
                 // Use lock to prevent multiple threads from accessing the network stream simultaneously
                 lock (this._client.GetStream())
@@ -181,11 +189,11 @@ namespace YoavDiscordServer
                     // Read 4 bytes from the memory stream into lengthBytes
                     this.memoryStream.Read(lengthBytes, 0, 4);
                     this.messageLength = BitConverter.ToInt32(lengthBytes, 0);
-                    // Reset memory stream to accumulate the rest of the message
+                    // Reset memory stream so it can save the rest of the message
                     this.memoryStream.SetLength(0);
                 }
 
-                // If there’s more data in this chunk, process it as part of the message body
+                // If there’s more data in this function call, process it as part of the message body
                 if (bytesRead > bytesToCopy)
                 {
                     this.memoryStream.Write(this._data, bytesToCopy, bytesRead - bytesToCopy);
@@ -199,14 +207,14 @@ namespace YoavDiscordServer
                 this.totalBytesRead += bytesRead;
             }
 
-            // If we've accumulated the full message, process it
+            // If we read the full message, process it
             if (this.messageLength > 0 && this.totalBytesRead >= this.messageLength + 4)
             {
                 this._discordClientConnection.ProcessMessage(this.memoryStream.ToArray(), this.messageLength,
                     this._isFirstMessage);
                 this._isFirstMessage = false;
 
-                //At this point the memory stream can contain more messages
+                //At this point the memory stream can contain the next message
                 int remainingDataBytes = this.totalBytesRead - (this.messageLength + 4);
 
 

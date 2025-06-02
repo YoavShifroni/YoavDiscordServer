@@ -171,6 +171,7 @@
     <Compile Include="ClientServerProtocolParser.cs" />
     <Compile Include="MediaRoom.cs" />
     <Compile Include="ModerationBot.cs" />
+    <Compile Include="MongoDBRestClient.cs" />
     <Compile Include="RoomsManager.cs" />
     <Compile Include="Data Objects\ClientServerProtocol.cs" />
     <Compile Include="CommandHandlerForSingleUser.cs" />
